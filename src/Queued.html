@@ -1,0 +1,590 @@
+<html>
+<head>
+	<!-- title>Queued</title -->
+	<style type="text/css">
+		body { overflow:hidden; }
+		#splashScreen {
+			width:100%;
+			height:100%;
+			position:absolute;
+			left:0;
+			top:0;
+			z-index:1000;
+		}
+	</style>
+	<link rel="stylesheet" href="js/dojo/resources/dojo.css"/>
+	<link rel="stylesheet" href="js/dojo/resources/dnd.css"/>
+	<link rel="stylesheet" href="js/dijit/themes/tundra/tundra.css"/>
+	<link rel="stylesheet" href="js/dijit/themes/dijit.css"/>
+	<link rel="stylesheet" href="css/Queued.css"/>
+	<link rel="stylesheet" href="js/dojox/widget/Dialog/Dialog.css"/>
+</head>
+<body class="tundra notLoggedIn blueBk">
+	<!-- loading/splash page -->
+	<div id="splashScreen" style="position:relative;">
+		<!--
+		<img src="img/loadingQueuedInitialSplash.png"/>
+		-->
+		<img src="img/loginBg.jpg" style="position:absolute;left:0;bottom:0;" />
+		<div style="position:absolute;top:50%;left:50%;">
+			<img src="img/loadingQueuedSplash.png" style="position:absolute;left:-411px;top:-221px;" />
+			<div id="splashMessage" style="position:absolute;left:84px;top:72px;width:240px;">Checking network connectivity<span id="splashAnim">...</span></div>
+		</div>
+	</div>
+	<script>
+		var __splashPos = 0, _splashLength = 4;
+		var __splashTimer__ = setInterval(function(){
+			if(qd && qd.services && qd.services.network && qd.services.network.initialized){
+				clearInterval(__splashTimer__);
+				document.getElementById("splashMessage").innerHTML = "Waiting for response from Netflix servers...";
+			} else {
+				var ellp = "", tmp = __splashPos++ % _splashLength;
+				for(var i=0; i< tmp; i++){
+					ellp += ".";
+				}
+				document.getElementById("splashAnim").innerHTML = ellp;
+			}
+		}, 500);
+	</script>
+
+	<div id="layoutNode">
+		<!-- page header -->
+		<div id="headerNode">
+			<ul id="bigNav" class="inlineNav">
+				<li id="bigNavYourQueue"><a href="#"></a></li>
+				<li id="bigNavTopMovies" class="selected"><a href="#"></a></li>
+			</ul>
+
+			<ul id="topNav" class="inlineNav">
+				<li id="topNavUser"></li>
+				<li id="topNavPreferences"><a href="#">Preferences</a></li>
+				<li id="topNavDelivered"><a href="#">delivered by Netflix</a></li>
+			</ul>
+
+			<form id="searchBar">
+				<input type="text" name="q" value="Search movies"/>
+			</form>
+		</div>
+
+		<!-- main content -->
+		<div id="contentNode">
+			<!-- Preferences page -->
+			<div id="prefsContainerNode">
+				<div id="prefsSubNav">
+					<ul class="inlineNav">
+						<li id="subNavPrefs" class="selected"><a href="#">Preferences</a></li>
+					</ul>
+				</div>
+
+				<div id="prefsPages">
+					<div class="prefsContainer">
+						<div class="prefsAccount">
+							<div class="prefsTitle">Preferences for: <span id="prefsUserName">user name</span></div>
+							<div class="prefsContent">
+								<div class="prefsAccountInput">
+									<input type="checkbox" id="receiveNotifications" name="receiveNotifications" tabIndex="1" checked="checked"/>
+									<label for="receiveNotifications">Display Received and Shipping Notifications</label>
+								</div>
+								<div class="prefsAccountInput">
+									<input type="checkbox" id="runInBackground" name="runInBackground" tabIndex="2" checked="checked"/>
+									<label for="runInBackground">Keep Queued running in the background when closed</label>
+								</div>
+
+								<div class="prefsDeAuth">
+									<div class="deleteIcon">
+										<input id="deauth" class="deauthorizeBtn" type="button" />
+										<label for="deauth">De-authorize Queued account</label>
+									</div>
+									<span id="deauthConfirm">
+										<span id="deauthConfirmDelete"></span>
+										<span id="deauthConfirmKeep"></span>
+
+										<div class="warnMessage">
+											<p>
+												This will remove Queue's authorization ability to access your Netflix account.
+												If you wish to use Queued again, you will need to re-authorize.
+											</p>
+											<p>
+												This does not remove the third-party access you granted this application when you
+												first authorized. If you wish to do that, go to <a class="extern" href="http://www.netflix.com/ThirdPartyAccess">Your Account</a>
+											 	and click the <strong>Remove</strong> button.
+											</p>
+										</div>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div class="prefsAbout">
+							<div class="prefsTitle">About Queued</div>
+							<div class="prefsContent">
+								<h2>DESKTOP APPS USING WEB TECHNOLOGIES</H2>
+								<p><a class="extern" href="http://sitepen.com/">SitePen</a> created Queued to show how tools such as the <a class="extern" href="http://dojotoolkit.org/">Dojo Toolkit</a> and <a class="extern" href="http://www.adobe.com/products/air/">Adobe AIR</a> can bring the desktop to life by lowering the barriers to creating great desktop applications.</p>
+								<h2>QUEUED IS OPEN SOURCE</H2>
+								<p><a id="viewSource" href="#">View the source</a> code and learn how to <a class="extern" href="http://sitepen.com/labs/queued">contribute</a>.</p>
+								<h2>LEARN MORE &#64;</H2>
+								<div class="sitepenLogo"><a class="extern" href="http://sitepen.com/"></a></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Auth pages for StackContainer -->
+			<div id="authContentNode">
+				<div id="authSubNav"></div>
+				<div id="authPages">
+					<!-- Create Account page -->
+					<div id="createAccountContainerNode" class="authPage">
+						<div class="loginContainer authContainer">
+							<div class="loginTitle">Link to Netflix</div>
+						</div>
+						<div class="contentTop">
+							<div id="authOverlay" style="display:block;">
+								<h2>Authorize Queued</h2>
+								<p>The Netflix login window tells Netflix that Queued can have limited access your account.</p>
+								<input class="authorizeBtn" type="authorize" value="">
+								<div class="authOverlayRight"></div>
+							</div>
+
+							<div class="authError" id="userAuthErrorMessage" style="display:none;">
+								<h2>Could Not Authorize</h2>
+								<p>
+									If you don't authorize queued to access your Netflix account, you will not be able
+									to view and manage your personal Netflix queue.
+								</p>
+							</div>
+
+							<div class="authError" id="authErrorMessage" style="display:none;">
+								<h2>Could Not Verify Credentials</h2>
+								<div>
+									<p>It looks like we couldn't verify your credentials on the Netflix servers. Please verify your Netflix account info in the popup window and try again.</p>
+								</div>
+							</div>
+							<div class="legal"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Queue pages for StackContainer -->
+
+			<div id="queueContentNode">
+				<div id="queSubNav">
+					<div class="loadingIndicator">
+						<div class="bgLoadingSpinner">
+							<object type="application/x-shockwave-flash" width="20px" height="20px">
+								<param name="wmode" value="transparent" />
+								<param name="movie" value="img/loadingGreen.swf" />
+							</object>
+						</div>
+						<div class="offlineIndicator"></div>
+					</div>
+					<ul class="inlineNav">
+						<li id="myQueueDvd" class="selected"><a href="#">DVD <span id="numInQueueTotal"></span></a></li>
+						<li id="myQueueInstant"><a href="#">Instant <span id="numInInstantTotal"></span></a></li>
+						<li id="myQueueHistory"><a href="#">Your History <span id="numInHistoryTotal"></span></a></li>
+					</ul>
+				</div>
+
+				<div id="queuePages">
+					<!-- Your Queue page -->
+					<div id="queueContainerNode">
+						<div class="contentContainer">
+							<div class= "DVDContainer">
+								<div class="listHomeTitle">
+									At Home
+								</div>
+							</div>
+							<table class="queueList">
+								<thead>
+									<tr class="listQueuedHead">
+										<th class="title">Movie</th>
+										<th class="instant">Instant</th>
+										<th class="stars">Star Rating</th>
+										<th class="shipped">Shipped</th>
+										<th class="arrive">Est Arrival</th>
+										<th class="problem">&nbsp;</th>
+									</tr>
+								</thead>
+								<tbody id="queueAtHomeTemplateNode" class="listQueuedBody"></tbody>
+							</table>
+
+							<div class= "DVDContainer">
+								<div class="listQueuedTitle">
+									Queued <span id="numInQueueQueued"></span>
+								</div>
+							</div>
+							<table class="queueList">
+								<thead>
+									<tr class="listQueuedHead">
+										<th class="index">Movie</th>
+										<th class="top"></th>
+										<th class="title"></th>
+										<th class="instant">Instant</th>
+										<th class="stars">Star Rating</th>
+										<th class="genre">Genre</th>
+										<th class="format">Disc Format</th>
+										<th class="remove">Remove</th>
+									</tr>
+								</thead>
+								<tbody id="queueTemplateNode" class="listQueuedBody"></tbody>
+							</table>
+
+							<div class= "DVDContainer">
+								<div class="listQueuedTitle">
+									Saved <span id="numInSavedQueued"></span>
+								</div>
+							</div>
+							<table class="queueList">
+								<thead>
+									<tr class="listQueuedHead">
+										<th class="title">Movie</th>
+										<th class="stars">Star Rating</th>
+										<th class="genre">Genre</th>
+										<th class="availability">Availability</th>
+										<th class="remove">Remove</th>
+									</tr>
+								</thead>
+								<tbody id="savedQueueTemplateNode" class="listQueuedBody"></tbody>
+							</table>
+						</div>
+					</div>
+
+					<!-- Queues Instant page -->
+					<div id="instantContainerNode">
+						<div class="contentContainer">
+							<div class= "nowShowingContainer">
+								<div class="listQueuedTitle">Recently Watched <span id="numInInstantWatched"></span></div>
+							</div>
+							<table class="queueList">
+								<thead>
+									<tr class="listQueuedHead">
+										<th class="viewed">Viewed On</th>
+										<th class="title">Movie</th>
+										<th class="instant">Instant</th>
+										<th class="stars">Star Rating</th>
+										<th class="genre">&nbsp;</th>
+										<th class="details">&nbsp;</th>
+									</tr>
+								</thead>
+								<tbody id="instantWatchedTemplateNode" class="listQueuedBody"></tbody>
+							</table>
+
+							<div class= "nowShowingContainer">
+								<div class="listQueuedTitle">Queued <span id="numInInstantQueued"></span></div>
+							</div>
+							<table class="queueList">
+								<thead>
+									<tr class="listQueuedHead">
+										<th class="index"></th>
+										<th class="top"></th>
+										<th class="title">Movie</th>
+										<th class="instant">Instant</th>
+										<th class="stars">Star Rating</th>
+										<th class="genre">Genre</th>
+										<th class="remove">Remove</th>
+									</tr>
+								</thead>
+								<tbody id="instantQueuedTemplateNode" class="listQueuedBody"></tbody>
+							</table>
+
+						</div>
+					</div>
+
+					<!-- Queues History page -->
+					<div id="historyContainerNode">
+						<div class="contentContainer">
+							<div class= "historyContainer">
+								<div class="listQueuedTitle">
+									History <span id="numInHistoryQueued"></span>
+								</div>
+							</div>
+							<table class="queueList">
+								<thead>
+									<tr class="listQueuedHead">
+										<th class="title">Movie</th>
+										<th class="stars">Star Rating</th>
+										<th class="shipped">Shipped</th>
+										<th class="returned">Returned</th>
+										<th class="details">Details</th>
+									</tr>
+								</thead>
+								<tbody id="historyTemplateNode" class="listQueuedBody"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+			<!-- Top Movies page -->
+			<div id="topMoviesContainerNode" class="contentContainer">
+				<div id="topMoviesSubNav">
+					<div class="loadingIndicator">
+						<div class="bgLoadingSpinner">
+							<object type="application/x-shockwave-flash" width="20px" height="20px">
+								<param name="wmode" value="transparent" />
+								<param name="movie" value="img/loading.swf" />
+							</object>
+						</div>
+						<div class="offlineIndicator"></div>
+					</div>
+					<ul class="inlineNav">
+						<li id="topMoviesTop100" class="selected"><a href="#">Netflix Top 100</a></li>
+						<li id="topMoviesNewReleases"><a href="#">New Releases</a></li>
+						<li id="topMoviesTop25ByGenre"><a href="#">Top 25 by Genre</a></li>
+						<li id="topMoviesRecommendations"><a href="#">Recommendations</a></li>
+					</ul>
+				</div>
+
+				<div class="contentTop">
+					<div id="top100Title">
+						<div class="subTitle">Top 100 Movies</div>
+					</div>
+
+					<div id="newReleasesTitle">
+						<div class="subTitle">New Releases</div>
+					</div>
+
+					<div id="genrePicker">
+						<div class="picker">Genre: <span id="genrePickerSelection"></span>
+							<div class="container">
+								<ul></ul>
+							</div>
+						</div>
+					</div>
+
+					<!-- public RSS feed results list -->
+					<div id="artworkList">
+					{% for movie in catalog_titles %}
+						<div class="movie">
+							<span class="movie_id">{% if movie.guid %}{{ movie.guid }}{% else %}{{ movie.title }}{% endif %}</span>
+							<span class="title">{{ forloop.counter }}. {{ movie.title }}</span>
+							<span class="boxArt"><img src="img/movieGlossLarge.png" class="gloss" /><img src="{% firstof movie.art.large 'img/moviePlaceholderArt.png' %}"/></span>
+							{% if movie.inQueue %}
+							<span class="addButton inQueue"></span>
+							{% else %}
+							<span class="addButton"></span>
+							{% endif %}
+						</div>
+					{% endfor %}
+						<div class="artworkListFooter"></div>
+					</div>
+
+					<!-- search and recommendations results list -->
+					<div id="searchResults">
+						<div class="searchResultsHeader{% if headerClass %} {{ headerClass }}{% endif %}">
+							<h2>{% if search_term %}&#8220;{{ search_term }}&#8221;{% else %}&nbsp;{% endif %}</h2>
+							<div class="filter">
+								{% if not skipCount %}<span class="found">Found {% firstof number_found "0" %} results</span>{% endif %}
+								<span>
+									Sort by: <span id="searchResultsSortPickerSelection">{% firstof sort_by "&nbsp;" %}</span>
+									<ul id="searchResultsSortPicker">
+										<li>Relevance</li>
+										<li>Title</li>
+										<li>Year</li>
+										<li>Genre</li>
+										<li>Rating</li>
+									</ul>
+								</span>
+							</div>
+						</div>
+						<div id="searchResultsList">
+						{% for movie in results %}
+							<div class="movie">
+								<div class="thumb">
+									<span class="movie_id">{{ movie.guid }}</span>
+									<span class="boxArt"><img src="img/movieGlossLarge.png" class="gloss" /><img src="{% firstof movie.art.large 'img/moviePlaceholderArt.png' %}"/></span>
+									{% if movie.inQueue %}
+									<span class="addButton inQueue"></span>
+									{% else %}
+									<span class="addButton"></span>
+									{% endif %}
+									<span class="starRating enabled"></span>
+								</div>
+								<div class="info">
+									<span class="title">{{ movie.title }}</span>
+									<span class="releaseYear">{{ movie.releaseYear }}</span>
+									<span class="rating">{{ movie.rating }}</span>
+									<div class="synopsis">{{ movie.synopsis }}</div>
+									<div class="genre"><span>Genre:</span>{{ movie.categories|first }}</div>
+								</div>
+							</div>
+						{% endfor %}
+						</div>
+						{% ifequal headerClass "recommendations" %}
+						<a class="recommendationsMore" href="#">more results...</a>
+						{% else %}
+						<a class="searchResultsMore" href="#">more results...</a>
+						{% endifequal %}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- movie info dialog -->
+	<div id="movieInfoDialogNode">
+		<div id="movieInfoTemplateNode">
+		{% if isLoggedIn %}
+			<h2 class="{{ movie.rating }}">{{ movie.title }}{% if movie.releaseYear %} <span>({{ movie.releaseYear }})</span>{% endif %}</h2>
+		{% else %}
+			<h2>{{ movie.title }}</h2>
+		{% endif %}
+			<div class="movie">
+				<span class="boxArt"><img src="{% firstof movie.art.large 'img/moviePlaceholderArt.png' %}"/></span>
+			{% if isLoggedIn %}
+				<span class="addButton"></span>
+				{% if movie.formats.instant %}<span class="addButton instant"></span>{% endif %}
+				<span class="starRating enabled"></span>
+			{% endif %}
+			</div>
+			<div class="info">
+				<div class="synopsis">
+					{{ movie.synopsis }}
+				{% if not isLoggedIn %}
+					<p>To see more detailed information about this title, please login.</p>
+				{% endif %}
+				</div>
+			{% if isLoggedIn %}
+				<div class="length"><span>Length:</span>{{ movie.runTime }} minutes</div>
+				<div class="genre"><span>Genre:</span>{{ movie.categories|first }}</div>
+				<div class="director"><span>Directed by:</span>{{ movie.allDirectors }}</div>
+				<div class="cast">
+					<span>Cast:</span>
+					<ul>{% for actor in movie.cast %}
+						<li>{{ actor.title }}</li>
+					{% endfor %}</ul>
+				</div>
+			{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<!-- movie info tooltip -->
+	<div id="movieInfoTooltipNode">
+		<div class="container">
+			<div id="movieInfoTooltipContentNode">
+				<h2><span>{{ movie.title }}</span> {{ movie.releaseYear }}</h2>
+				<div class="boxArt">
+					<img src="img/movieGlossMedium.png" class="gloss" />
+					<img src="{% firstof movie.art.medium 'img/moviePlaceholderArt.png' %}" width="64" height="90"/>
+				</div>
+				<div class="synopsis">{% if movie.synopsis %}{{ movie.synopsis }}{% else %}<i>No synopsis provided.</i>{% endif %}</div>
+				<table class="details">
+					<tr class="{% if castMember1 %}cast{% else %}notShown{% endif %}">
+						<th>Starring:</th>
+						<td>
+							<span>{{ castMember1 }}{% if castMember2 %}, {% endif %}</span>
+						{% if castMember2 %}
+							<span>{{ castMember2 }}</span>
+						{% endif %}
+						</td>
+					</tr>
+					<tr class="{% if movie.categories[0] %}genre{% else %}notShown{% endif %}">
+						<th>Genre:</th>
+						<td>{{ movie.categories|first }}</td>
+					</tr>
+					<tr class="{% if movie.rating %}mpaaRating{% else %}notShown{% endif %}">
+						<th>Rating:</th>
+						<td>{{ movie.rating }}</td>
+					</tr>
+				</table>
+				<div class="starRatings">
+				{% if movie.ratings.user or movie.ratings.predicted or movie.ratings.average %}
+					{% if movie.ratings.user %}
+					<div class="userRating">
+						<span class="userRatingStars"></span>{{ movie.ratings.user }} Your Rating
+					</div>
+					{% else %}{% if movie.ratings.predicted %}
+					<div class="predictedRating">
+						<span class="predictedRatingStars"></span>{{ movie.ratings.predicted }} Predicted Rating
+					</div>
+					{% endif %}{% endif %}{% if movie.ratings.average %}
+					<div class="averageRating">
+						<span class="averageRatingStars"></span>{{ movie.ratings.average }} member average
+					</div>
+					{% endif %}
+				{% endif %}
+				</div>
+			</div>
+		</div>
+		<div class="arrow"></div>
+	</div>
+
+	<!-- sync confirmation dialog -->
+	<div id="syncConfirmDialogNode">
+		<div id="syncQuestionNode">
+			<p>Queued has detected that you are back online, and you have actions to be synchronized with the Netflix servers. Please synchronize now, or discard the changes you've made.</p>
+			<div>
+				<span class="syncButton synchronizeButton"></span>
+				<span class="syncButton discardButton"></span>
+			</div>
+		</div>
+		<div id="syncProgressNode">
+			<p id="syncProgressPrompt">Synchronizing...</p>
+			<div class="progressBar">
+				<div id="progressNode"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- loading spinner -->
+	<div id="loaderNode">
+		<div class="loadingSpinner">
+			<object type="application/x-shockwave-flash" width="20px" height="20px">
+				<param name="wmode" value="transparent" />
+				<param name="movie" value="img/loading.swf" />
+			</object>
+		</div>
+	</div>
+
+	<!-- background offline indicator tooltip -->
+	<div id="indicatorTooltip" class="indicatorTooltip">
+		<div class="indicatorTooltipTop"></div>
+		<div class="indicatorTooltipBody">
+			<h1>An unknown error has occurred.</h1>
+			<p>An unknown error has occurred with your last action.</p>
+		</div>
+		<div class="indicatorTooltipBottom"></div>
+	</div>
+
+	<!-- search auto suggest list -->
+	<div id="searchAutoSuggest"><ul id="searchAutoSuggestList"></ul></div>
+
+	<!-- scripts -->
+	<script>
+		var djConfig = {
+			isDebug: true, //true,
+			parseOnLoad: false,
+			modulePaths: {
+				qd: "dev/qd",
+				dair: "dev/dair"
+			},
+			airConfig: {
+				terminal:false,
+				file:false,
+				options:{
+					path:"documents",
+					folder:"QueuedLogs",
+					name:"Log",
+					timeStamp:false,
+					append:false
+				},
+				showTimestamp: false,
+				showSender: false,
+				flashTabLabels: false
+			}
+		};
+
+	</script>
+	<script type="application/x-shockwave-flash" src="lib/servicemonitor.swf"></script>
+	<script src="js/dojo.js"></script>
+	<script src="js/qd.js"></script>
+	<script>
+		dojo.require("qd.init");
+	</script>
+	<script type="application/x-shockwave-flash" src="lib/applicationupdater_UI.swf"></script>
+	<script src="lib/AIRSourceViewer.js"></script>
+</body>
+</html>

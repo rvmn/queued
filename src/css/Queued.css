@@ -1,0 +1,1977 @@
+* {
+	margin:0;
+	padding:0;
+}
+
+body {
+	background:url("../img/appBgRepeat.jpg") repeat-x top left #fff;
+	font-family:"Myriad Pro", Helvetica, Arial, sans-serif;
+}
+
+/* ---------- basic layout ---------- */
+
+html, body, #layoutNode {
+	width:100%;
+	height:100%;
+	overflow:hidden;
+	-webkit-user-select:none;
+}
+body.blueBk{
+	background-color:#70b1c3;
+}
+#headerNode {
+	position:relative;
+	height:116px;
+
+}
+
+#contentNode {
+}
+
+#topMoviesContainerNode {
+}
+
+
+.contentTop {
+	clear:both;
+	overflow-y:auto;
+	padding:0 40px;
+	position:relative;
+	top:-4px;
+}
+
+#bottomFrameNode {
+	background:#fff;
+	height:12px;
+}
+
+#headerUnderlay,
+#queueUnderlay,
+#topMoviesUnderlay {
+	display:none;
+	position:absolute;
+	left:0;
+	top:0;
+	right:0;
+	background-color:#000;
+	z-index:10;
+	opacity:.6;
+}
+
+#headerUnderlay {
+	height:161px;
+}
+
+#queueUnderlay,
+#topMoviesUnderlay {
+	bottom:0;
+}
+
+/* ---------- global styles ---------- */
+
+.inlineNav {
+	list-style:none;
+}
+
+.inlineNav li {
+	display:block;
+	float:left;
+}
+
+.inlineNav a {
+	color:#fff;
+}
+
+.dijitDialogUnderlay {
+	background-color:#000;
+	opacity:.6;
+}
+
+.movie_id {
+	display:none !important;
+}
+
+.loadingIndicator {
+	display: none;
+	width: 41px;
+	height: 28px;
+	position: absolute;
+	top: 7px;
+	right: 22px;
+	background: url("../img/indicatorsBg.png") no-repeat 0 0;
+}
+.bgLoadingSpinner,
+.offlineIndicator {
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	top: 3px;
+	left: 10px;
+}
+.bgLoadingSpinner {
+	display: none;
+}
+.offlineIndicator {
+	display: none;
+	background: url("../img/indicatorsSprite.png") no-repeat -21px 0;
+}
+.indicatorTooltip {
+	display: none;
+	position: absolute;
+	z-index: 9999;
+	top: 152px;
+	right: -13px;
+}
+.indicatorTooltipTop {
+	width: 209px;
+	background: url("../img/notificationTooltip.png") no-repeat top left;
+	height: 20px;
+}
+.indicatorTooltipBody {
+	width: 209px;
+	background: url("../img/notificationTooltipBg.png") repeat-y 0 0;
+	padding: 0 10px !important;
+}
+.indicatorTooltipBody h1 {
+	margin: 0 6px;
+	margin-bottom: 2px;
+	font-size: 12px;
+	font-weight: bold;
+	color: red;
+	width:177px;
+}
+.indicatorTooltipBody p {
+	font-size: 11px;
+	margin: 0 6px;
+	padding-bottom: 4px;
+	width:177px;
+}
+.indicatorTooltipBottom {
+	width: 209px;
+	background: url("../img/notificationTooltip.png") no-repeat left bottom;
+	height: 6px;
+}
+
+
+/* ---------- header ---------- */
+
+#bigNav {
+	float: left;
+	width: 600px;
+	height: 115px;
+	padding: 0;
+	list-style: none;
+	overflow: hidden;
+	position: relative;
+}
+
+#bigNav li {
+	margin: 0;
+	padding: 0;
+	width: 300px;
+	height: 120px;
+	list-style: none;
+	position: absolute;
+	display: inline;
+	top: 0;
+	background: url("../img/mainMenu.png") no-repeat 0 0;
+}
+
+#bigNav li a {
+	display:block;
+	padding: 115px 0 0 0;
+	overflow: hidden;
+	display: block;
+	height: 0px !important;
+}
+
+#bigNav li#bigNavYourQueue {
+	left: 0;
+	background-position: 0 0;
+}
+
+#bigNav li#bigNavTopMovies {
+	left: 275px;
+	background-position: -300px 0;
+}
+
+#bigNav li:hover#bigNavYourQueue {
+	background-position: 0 -115px;
+}
+
+#bigNav li:hover#bigNavTopMovies {
+	background-position: -300px -115px;
+}
+
+#bigNav li.selected {
+	top:-5px;
+}
+
+#bigNav li.selected#bigNavYourQueue {
+	background:url("../img/mainMenu.png") 0 -236px;
+}
+
+#bigNav li.selected#bigNavTopMovies {
+	background:url("../img/mainMenu.png") -300px -236px;
+}
+
+#topNav {
+	position:absolute;
+	top:10px; right:20px;
+	font-size:.9em;
+	list-style:none;
+}
+
+#topNav li {
+	padding:0 .8em;
+	margin:0;
+	border-right:1px solid #fff;
+	color:#fff;
+}
+
+#topNav li a {
+	text-decoration:none;
+	border-bottom:2px solid #ea8d8b;
+}
+
+#topNav li:hover a {
+	color:#f9e5be;
+}
+
+#topNavDelivered {
+	padding-right:0 !important;
+	border-right:none !important;
+}
+
+#searchBar {
+	display:none;
+	position:absolute;
+	top:50px; right:20px;
+}
+
+#searchBar input {
+	width:238px;
+	padding:5px 8px;
+	outline:none;
+	-webkit-border-radius:12px;
+	border:1px solid #C60000;
+	color: #AFAFAF;
+	background:url("../img/searchBg.png") repeat-x left top;
+}
+
+#searchAutoSuggest {
+	position:absolute;
+	top:75px;
+	right:30px;
+	width:214px;
+	z-index:100;
+	padding:6px 0;
+	border:1px solid #bf0000;
+	border-top:1px solid #c3c3c3;
+	background: #fff url("../img/autoSuggestBg.png") repeat-x top left;
+	display:none;
+}
+
+#searchAutoSuggestList {
+	display:none;
+	list-style:none;
+}
+
+#searchAutoSuggestList li {
+	color:#bf0000;
+	margin:0 6px;
+	padding:0 3px;
+	width:196px;
+	white-space: nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	-webkit-text-overflow:ellipsis;
+}
+
+#searchAutoSuggestList li.selected {
+	background-color:#da191d;
+	color:#fff;
+}
+
+#searchAutoSuggestList li:hover {
+	cursor:pointer;
+	background-color:#da191d;
+	color:#fff;
+	font-weight:bold;
+}
+
+#searchAutoSuggestList li.nohover:hover {
+	cursor:inherit;
+	background-color:inherit;
+	color:#bf0000;
+}
+
+/* ---------- loading/spinner ---------- */
+
+#loaderNode {
+	display:none;
+	position:absolute;
+	top:50%;
+	left:50%;
+	margin-top:-130px;
+	margin-left:-100px;
+	width:228px;
+	height:158px;
+	z-index:1000;
+	background:url("../img/loading.png") no-repeat top left;
+}
+
+#loaderNode h2 {
+	position: absolute;
+	top: 16%;
+	left: 28%;
+	color: #FFF;
+	font-size: 21px;
+	font-weight: normal;
+	text-shadow: 1px 1px 7px #000;
+}
+
+#loaderNode .loadingSpinner {
+	position: absolute;
+	top: 43%;
+	right: 24%;
+}
+
+/* ---------- SubNav ---------- */
+#topMoviesSubNav,
+#queSubNav,
+#authSubNav,
+#prefsSubNav {
+	position: relative;
+	padding-left:15px;
+	padding-top:1px;
+	font-size:16px;
+	height:40px;
+	margin-top:1px;
+}
+
+#topMoviesSubNav ul li,
+#queSubNav ul li,
+#authSubNav ul li,
+#prefsSubNav ul li {
+	margin:0 10px;
+	line-height: 40px;
+	padding:0 5px;
+}
+
+#topMoviesSubNav ul li a,
+#queSubNav ul li a,
+#authSubNav ul li a,
+#prefsSubNav ul li a {
+	text-decoration:none;
+	height:40px;
+	display:inline-block;
+	padding:0 10px;
+}
+
+#topMoviesSubNav ul li a:hover,
+#queSubNav ul li a:hover,
+#authSubNav ul li a:hover,
+#prefsSubNav ul li a:hover {
+	color:#ffffde;
+	background:url("../img/subMenuBgHover.png") repeat-x 50% 50%;
+}
+
+#topMoviesSubNav ul li.selected,
+#queSubNav ul li.selected,
+#authSubNav ul li.selected,
+#prefsSubNav ul li.selected {
+	background:url("../img/subMenuActiveBorder.png") repeat-y top right, url("../img/subMenuActiveBorder.png") repeat-y top left;
+	position:relative;
+}
+
+#topMoviesSubNav ul li.selected a,
+#queSubNav ul li.selected a,
+#authSubNav ul li.selected a,
+#prefsSubNav ul li.selected a {
+	background:url("../img/subMenuBgActive.png") repeat-x 50% 50%;
+}
+
+#topMoviesSearchResults {
+	display:none;
+}
+
+/* ---------- preferences ---------- */
+#prefsContainerNode {
+	overflow:hidden;
+}
+#prefsPages {
+	margin-top:8px;
+	background:url("../img/loginBg.jpg") repeat top left;
+	width:100%;
+	height:100%;
+	overflow:hidden;	
+}
+#prefsPages .prefsContainer {
+	position:relative;
+	height:100%;
+	top:-6px;
+	margin: 0 50px;
+}
+#prefsPages .prefsAccount {
+	position:absolute;
+	left:0px;
+	width:50%;
+	height:60px;
+	background:url("../img/backgroundTitleBg.png") no-repeat 0 -480px;	
+}
+#prefsPages .prefsAbout {
+	position:absolute;
+	right:0px;
+	width:50%;
+	height:60px;	
+	background:url("../img/backgroundTitleBg.png") no-repeat 0 -540px;	
+}
+#prefsPages .prefsTitle {
+	position:relative;
+	top:27px;
+	left:10px;
+	color:#BF0000;
+	font-size:19px;
+	font-weight: bold;	
+}
+#prefsPages .prefsTitle span {
+	color:#000;
+}
+#prefsPages .prefsContent {
+	position:relative;
+	top:50px;
+	left:15px;
+}
+#prefsPages .prefsAccountInput {
+	margin-bottom:15px;
+	float:left;
+	width:100%;
+}
+#prefsPages .prefsAccountInput input {
+	float:left;
+	width:36px;
+}
+#prefsPages .prefsContent label {
+	font-size:16px;
+	float:left;
+	width:85%;
+}
+#prefsPages .prefsDeAuth {
+	clear:both;
+	width:90%;
+}
+#prefsPages #deauthConfirm #deauthConfirmDelete,
+#prefsPages #deauthConfirm #deauthConfirmKeep{
+	float:left;
+	margin:15px 5px;
+	height:31px;
+	width:70px;
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -1196px;
+	cursor:pointer;
+}
+#prefsPages #deauthConfirm #deauthConfirmDelete {
+	width:93px;
+	margin-left:-5px;
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -1155px;
+}
+#prefsPages .deleteIcon {
+	float:left;
+	width:100%;
+	margin:0 0 0 -5px;
+	font-size: 14px;
+	line-height:28px;
+	opacity:.4;
+	cursor:pointer;
+}
+#prefsPages .deleteIcon:hover {
+	font-size: 14px;
+	color:#bd1412;
+	opacity:1;
+}
+#prefsPages .deauthorizeBtn{
+	float:left;
+	height:26px;
+	width:26px;
+	padding:0 0 0 41px;	
+	border:none !important;
+	background:url("../img/deleteIcon.png") no-repeat top left;
+	cursor:pointer;
+}
+#prefsPages .deleteIcon label{
+	padding:0;
+}
+#prefsPages .warnMessage {
+	clear:left;
+	font-size:11px;
+	color:#6f837d;
+}
+#prefsPages #deauthConfirm {
+	display:none;
+	width:76%;
+	margin-left:36px;
+}
+#prefsPages h2 {
+	margin:0;
+	font-size:16px;
+	display:block;
+}
+#prefsPages p {
+	margin:15px 0;
+	font-size:13px;
+}
+#prefsPages a {
+	color:#FFF;
+}
+#prefsPages .sitepenLogo {
+	position:relative;
+	width:300px;
+	height:115px;
+	margin-top: -36px;
+	margin-left:-82px;
+	background:url("../img/sitePenLogo.png") no-repeat top left;
+}
+#prefsPages .sitepenLogo a {
+	position:absolute;
+	top:45px;
+	left:55px;
+	width:215px;
+	height:60px;
+}
+/* ---------- Not Logged In ---------- */
+
+#notLoggedIn, #topNavLogin{
+	display:none;
+}
+.notLoggedIn #notLoggedIn, .notLoggedIn #topNavLogin{
+	display:inline;
+}
+.notLoggedIn #topNavLogout, .notLoggedIn #topNavUser, .notLoggedIn #topNavPreferences{
+	display:none;
+}
+
+/* ---------- create account ---------- */
+
+#authPages {
+	margin-top:8px;
+	background:url("../img/loginBg.jpg") repeat top left;
+}
+
+#authPages .loginContainer {
+	position:relative;
+	width:414px;
+	height:70px;
+	margin:45px auto 0px auto;
+	text-align:center;
+	background:url("../img/loginTitle.png") no-repeat 0 0px;
+}
+
+#authPages .authContainer {
+	background:url("../img/authAccountTitle.png") no-repeat 0 0px;
+}
+
+#authPages .createContainer {
+	background:url("../img/createAccountTitle.png") no-repeat 0 0px;
+}
+
+#authPages .loginTitle {
+	position:relative;
+	top:29px;
+	color:#000;
+	font-size:19px;
+	font-weight: bold;	
+	display:none;
+}
+
+.authForm{
+	display:block;
+	width:275px;
+	height:200px;
+	position:relative;
+	margin:20px auto;
+	clear:both;
+}
+.authForm h2{
+	display:block;
+	height:50px;
+	position:relative;
+	margin:20px auto 0px auto;
+	font-size:36px;
+	text-align:center;
+}
+
+#authPages #createAccount {
+	width:329px;
+	height:181px;
+	position:relative;
+	padding:34px 47px;
+	background:url("../img/createAccountBg.png") no-repeat top left;
+}
+.authForm fieldset label{
+	font-size:18px;
+	color:#28423b;
+	margin-bottom:15px;
+}
+.authForm fieldset .field{
+	display:block;
+	height:30px;
+	width:319px;
+	font-size:24px;	
+	line-height:30px;
+	margin-bottom:27px;
+	padding:0 3px !important;
+	background:url("../img/inputBg.png") repeat-x top left;
+	border:1px solid #5da2b7;
+	outline:none;
+}
+.authForm .submitBtn{
+	float:right;
+	height:33px;
+	width:130px;
+	border:none !important;
+	background:url("../img/createAccountButton.png") no-repeat top left;
+	cursor:pointer;
+}
+.authError{
+	width:363px;
+	height:79px;
+	margin:0 auto 20px auto;
+	padding:30px;
+	background:url("../img/createAccountErrorBg.png") no-repeat top left;
+}
+.authError a{
+	color:#ffffff;
+}
+.authError h2 {
+	font-size:24px;
+	margin:0;
+	color:#fbd66d;
+	font-weight:normal;
+}
+.authError p {
+	margin:5px 0 0 0;
+	font-size:15px;
+}
+#authPages #authOverlay {
+	width:423px;
+	height:249px;
+	margin:0 auto;
+	position:relative;
+	background:url("../img/createAccountBg.png") no-repeat top left;
+}
+#authPages #authOverlay h2 {
+	position:absolute;
+	top:20px;
+	left:34px;
+	color:#cb2322;
+	font-size:23px;
+}
+#authPages #authOverlay p {
+	position:absolute;
+	top:80px;
+	left:34px;
+	width:200px;
+	color:#28423b;
+	font-size:16px;
+}
+#authPages #authOverlay .authorizeBtn {
+	position:absolute;
+	top:186px;
+	left:30px;
+	height:33px;
+	width:130px;
+	border:none !important;
+	background:url("../img/authorizeButton.png") no-repeat top left;
+	cursor:pointer;
+}
+#authPages .authOverlayRight {
+	position:absolute;
+	top:0;
+	right:0;
+	width:190px;
+	height:249px;
+	background:url("../img/authOverlayBg.png") no-repeat top right;
+}
+
+.legal{
+}
+.checkWrap input{
+
+}
+.checkWrap label{
+
+}
+/* ---------- Login Page ---------- */
+#loginContainerNode{
+
+}
+#login{
+	width:400px;
+}
+#login .user{
+	display:block;
+	width:365px;
+	height:82px;
+	line-height:70px;
+	font-size:24px;
+	text-align:left;
+	padding-left:30px;
+	padding-right:15px;
+	font-weight:normal;
+	color:#ffffff;
+	font-family:Verdana;
+	cursor:pointer;
+	overflow:hidden;
+	white-space:nowrap;
+	text-overflow: ellipsis;
+	-webkit-text-overflow: ellipsis;	
+}
+#login .passwordField {
+	width:272px;
+	background:url("../img/inputBg.png") repeat-x top left;
+	margin-bottom:5px; /* keeps checkbox from being caught on edge of submit button*/
+	outline:none;
+}
+#login .user:hover span {
+
+}
+#login .user {
+	background:url("../img/loginUserBgOff.png") no-repeat top left;
+}
+#login .user:hover,
+#login .user.selected{
+	color:#000;
+	background:url("../img/loginUserBg.png") no-repeat top left;
+}
+#login .user.selected{
+	cursor:default;
+}
+#login .user.selected span{
+	display:none;
+}
+#login .user.selected input{
+	line-height:26px;
+	margin-top:20px;
+	padding-left:3px;
+	border:1px solid #b8cfd4;
+}
+#login .submitBtn{
+	margin-right:15px;
+	height:33px;
+	width:70px;
+	border:none !important;
+	background:url("../img/loginButton.png") no-repeat top left;
+	cursor:pointer;
+}
+#login #passwordNode label,
+#login #passwordNode #keepLoggedIn{ /* checkbox */
+	display:block;
+	float:right;
+	height:12px;
+	line-height:12px;
+	margin:10px 0 0 0;
+	padding:0;
+}
+#login #passwordNode label{
+	font-size:10px;
+	margin-right:5px;
+	line-height:15px;
+	color:#ffffff;
+}
+#login #passwordNode #keepLoggedIn{
+	margin-right:35px;
+}
+
+
+
+#login fieldset{
+	width:250px;
+
+}
+#loginContainerNode h2{
+	text-align:center;
+	font-size:24px;
+	margin:20px 0px;
+}
+
+#loginContainerNode a{
+	margin:10px;
+}
+
+
+/* ---------- your queue ---------- */
+
+#queueContentNode .contentContainer{
+	font-size:14px;
+	padding:0 50px;
+}
+#queueContentNode .DVDContainer,
+#queueContentNode .nowShowingContainer,
+#queueContentNode .historyContainer {
+	position:relative;
+	width:400px;
+	height:60px;
+	background:url("../img/backgroundTitleBg.png") no-repeat 0 -300px;
+}
+#queueContentNode .nowShowingContainer {
+	background:url("../img/backgroundTitleBg.png") no-repeat 0 -60px;
+}
+#queueContentNode .historyContainer {
+	background:url("../img/backgroundTitleBg.png") no-repeat 0 -120px;
+}
+#queueContentNode .listHomeTitle,
+#queueContentNode .listQueuedTitle {
+	position:relative;
+	top:29px;
+	left:10px;
+	color:#BF0000;
+	font-size:19px;
+	font-weight: bold;
+}
+#queueContentNode .queueList {
+	border-collapse:collapse;
+	width:100%;
+	table-layout:fixed;
+	background:url("../img/yourQueueHeaderBg.png") repeat-x top left;
+}
+#queueContentNode .listQueuedHead {
+	font-size:13px;
+	color:#fff;
+	height:30px;
+	line-height:30px;
+	margin-bottom:5px;
+	border-left:1px solid #47828D;
+	border-right:1px solid #47828D;
+}
+#queueContentNode .listQueuedHead th {
+	cursor:default !important;
+}
+#queueContentNode .listQueuedBody {
+	font-size:13px;
+}
+#queueContentNode .listQueuedRow {
+	height:33px !important;
+	line-height:33px;
+	background:url("../img/queueRowBg.png") repeat-x bottom left;
+}
+#queueContentNode .listQueuedRow:hover {
+	background-color:#ecf6f6;
+}
+#queueContentNode .listQueuedHead .index,
+#queueContentNode .listQueuedRow .index {
+	width:30px;
+	padding-left:4px;
+}
+#queueContentNode .listQueuedRow .index div {
+	height:21px;
+	width:24px;
+	background:url("../img/queueIndexBg.png") no-repeat top left;
+	border:1px solid #c3c3c3;
+}
+#queueContentNode .listQueuedRow:hover .index div {
+}
+#queueContentNode .listQueuedRow .index div input {
+	border:0;
+	background:0;
+	height:24px;
+	width:24px;
+	text-align:center;
+	outline:none;
+}
+#queueContentNode .listQueuedHead .top,
+#queueContentNode .listQueuedRow .top {
+	width:30px;
+}
+#queueContentNode .listQueuedRow .top {
+	background:url("../img/topTriangle.png") no-repeat 10px 15px;
+	cursor:pointer;
+}
+#queueContentNode .listQueuedRow .top:hover {
+	background:url("../img/topTriangleHover.png") no-repeat 10px 15px;
+	cursor:pointer;
+}
+#queueContentNode .listQueuedRow .top.first,
+#queueContentNode .listQueuedRow .top.first:hover {
+		
+}
+
+#queueTemplateNode .listQueuedRow:first-child .top,
+#queueTemplateNode .listQueuedRow:first-child .top:hover,
+#instantQueuedTemplateNode .listQueuedRow:first-child .top,
+#instantQueuedTemplateNode .listQueuedRow:first-child .top:hover{
+	background:none;
+}
+#queueContentNode .listQueuedHead :first-child {
+	padding-left:10px;
+}
+#queueContentNode .listQueuedRow .title {
+	overflow:hidden;
+	white-space:nowrap;
+	text-overflow: ellipsis;
+	-webkit-text-overflow: ellipsis;
+	text-decoration:underline;
+	color:#111;
+	cursor:pointer;
+	padding-left:5px;
+}
+#queueContentNode .listQueuedBody .listQueuedRow .title:hover {
+	color:#ff0000;
+}
+#queueContentNode .listQueuedHead .viewed,
+#queueContentNode .listQueuedRow .viewed {
+	width:84px; /* combined .top and .index*/
+	padding-left:10px;
+}
+#queueContentNode .listQueuedHead .instant,
+#queueContentNode .listQueuedRow .instant {
+	width:64px;
+}
+#queueContentNode .listQueuedHead .instant {
+	padding-left:14px;
+}
+
+#queueContentNode .listQueuedRow .instant a{
+	display:block;
+	position:relative;
+	top:3px;
+	color:transparent;
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -963px;
+}
+#queueContentNode .listQueuedRow .instant a:hover {
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -1010px;
+}
+
+#queueContentNode .listQueuedRow .instant.inQ {
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -1064px;
+}
+#queueContentNode .listQueuedRow .instant.inQ:hover {
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -1109px;
+}
+
+#queueContentNode .listQueuedRow .instant.atHome {
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -1514px;
+}
+#queueContentNode .listQueuedRow .instant.atHome:hover {
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -1554px;
+}
+
+#queueContentNode .listQueuedHead .stars,
+#queueContentNode .listQueuedRow .stars {
+	width:21%;
+}
+#queueContentNode .listQueuedHead .stars {
+	width:18%;
+	padding-left:20px;
+}
+#queueContentNode .listQueuedRow .stars {
+	position:relative;
+	top:50%;
+	margin-top:-10px;
+}
+
+#queueContentNode .listQueuedHead .availability,
+#queueContentNode .listQueuedRow .availability,
+#queueContentNode .listQueuedHead .shipped,
+#queueContentNode .listQueuedRow .shipped,
+#queueContentNode .listQueuedHead .returned,
+#queueContentNode .listQueuedRow .returned,
+#queueContentNode .listQueuedHead .genre,
+#queueContentNode .listQueuedRow .genre {
+	width:17.5%;
+	overflow:hidden;
+	white-space:nowrap;
+	text-overflow: ellipsis;
+	-webkit-text-overflow: ellipsis;
+}
+
+#queueContentNode .listQueuedHead .arrive,
+#queueContentNode .listQueuedRow .arrive,
+#queueContentNode .listQueuedHead .format,
+#queueContentNode .listQueuedRow .format {
+	width:17.5%;
+}
+#queueContentNode .listQueuedHead .remove,
+#queueContentNode .listQueuedRow .remove,
+#queueContentNode .listQueuedHead .details,
+#queueContentNode .listQueuedRow .details,
+#queueContentNode .listQueuedHead .problem,
+#queueContentNode .listQueuedRow .problem {
+	width:90px;
+}
+#queueContentNode .listQueuedRow .details a,
+#queueContentNode .listQueuedRow .problem a {
+	font-size:11px;
+	color:#1f1f1f;	
+}
+#queueContentNode .listQueuedRow .details a:hover,
+#queueContentNode .listQueuedRow .problem a:hover {
+	color:#ff0000;	
+}
+#queueContentNode .listQueuedRow .remove {
+}
+#queueContentNode .listQueuedRow .remove div {
+	opacity:.6;
+	cursor:pointer;
+	position:relative;
+	width:100%;
+	height:26px;
+}
+#queueContentNode .listQueuedRow .remove:hover div {
+	opacity:1;
+}
+#queueContentNode .listQueuedRow .remove span {
+	height:26px;
+}
+#queueContentNode .listQueuedRow .remove .button {
+	position:absolute;
+	left:0;
+	top:0;
+	display:inline-block;
+	width:70px;
+	background:url("../img/removeButton.png") no-repeat 6px 0;
+}
+#queueContentNode .listQueuedRow .remove .confirm {
+	position:absolute;
+	display:none;
+	width:110px;
+	margin:0 -40px 0 -4px;
+}
+#queueContentNode .listQueuedRow .remove .confirm span {
+	display:inline-block;
+	width:55px;
+	background:url("../img/removeButton.png") no-repeat;
+}
+#queueContentNode .listQueuedRow .remove .confirm .keep {
+	background-position:-55px -26px;
+}
+#queueContentNode .listQueuedRow .remove .confirm .confirmRemove {
+	background-position:0 -26px;
+}
+#queueContentNode .listQueuedRow.noItems td{
+	font-style:italic;
+	padding-left:10px;
+}
+.listQueuedRow .animatedRow {
+	background:#ffffff;
+	border:#ff0000 5px solid;
+	visibility:hidden;
+}
+
+.dojoDndAvatar {
+	font-size:100% !important;
+	opacity:.5;
+}
+
+.dojoDndAvatar td {
+	padding:6px 8px !important;
+}
+
+.dojoDndItemBefore {
+	margin-top:-2px;
+}
+
+.dojoDndItemAfter {
+	margin-bottom:-2px;
+}
+
+
+.dojoDndAvatarCanDrop {
+	opacity:1;
+}
+
+.dojoDndAvatarHeader {
+	display:none;
+}
+
+/* ---------- top movies ---------- */
+#top100Title {
+	display:none;
+	float:left;
+	font-size:1.6em;
+	font-weight:lighter;
+	letter-spacing:.1em;
+	position:relative;
+	left:34px;
+	width:350px;
+	height:30px;
+	padding-top:30px;
+	padding-left:15px;
+	vertical-align:baseline;
+	background:url("../img/backgroundTitleBg.png") no-repeat 0 -600px;
+}
+
+#newReleasesTitle {
+	display:none;
+	float:left;
+	font-size:1.6em;
+	font-weight:lighter;
+	letter-spacing:.1em;
+	position:relative;
+	left:34px;
+	width:350px;
+	height:30px;
+	padding-top:30px;
+	padding-left:15px;
+	vertical-align:baseline;
+	background:url("../img/backgroundTitleBg.png") no-repeat 0 -660px;
+}
+
+#genrePicker {
+	display:none;
+	float:left;
+	font-size:1.6em;
+	font-weight:lighter;
+	letter-spacing:.1em;
+	position:relative;
+	left:34px;
+	width:350px;
+	height:30px;
+	padding-top:30px;
+	padding-left:15px;
+	vertical-align:baseline;
+	background:url("../img/backgroundTitleBg.png") no-repeat 0 -360px;
+}
+
+#top100Title .subTitle,
+#newReleasesTitle .subTitle,
+#genrePicker div.picker {
+	position:absolute;
+	z-index:100;
+	color: #BF0000;
+	font-weight: bold;
+}
+
+#genrePicker span {
+	padding:0 24px 0 11px;
+	color:#130204;
+	font-weight: normal;
+	background:url("../img/pickerDownArrow.png") no-repeat right top;
+	cursor:pointer;
+}
+
+#genrePicker ul {
+	display:none;
+	letter-spacing:normal;
+	float:left;
+	background:url("../img/appBgGloss.jpg") repeat-y -100px bottom;
+}
+
+#genrePicker.open {
+	width:85%;
+	min-width:550px;
+}
+
+#genrePicker.open div.picker div.container {
+	max-width:780px;
+	float:left;
+	padding:8px;
+	background:url("../img/dialogBorder.png") repeat left top;
+}
+
+#genrePicker.open ul {
+	display:block;
+	padding:20px;
+	list-style:none;
+	color:#f0f0f0;
+	font-weight: normal;
+	border:solid #fff;
+	border-top-width:12px;
+	border-bottom-width:12px;
+	border-left:none;
+	border-right:none;
+}
+
+#genrePicker ul li {
+	float:left;
+	display:inline-block;
+	padding:8px;
+	width:200px;
+}
+
+#genrePicker:hover span,
+#genrePicker ul li.selected,
+#genrePicker ul li:hover {
+	color:#ff9;
+	cursor:pointer;
+}
+
+#artworkList {
+	clear:left;
+}
+
+#artworkList .artworkListFooter {
+	clear:both;
+}
+
+/* ---------- search results ---------- */
+
+#searchResults {
+	display:none;
+	clear:left;
+	float:left;
+	width:100%;
+	padding-bottom:30px;
+}
+
+#searchResults .searchResultsHeader {
+	float:left;
+	position:relative;
+	width:100%;
+}
+
+#searchResults .searchResultsHeader h2 {
+	float:left;
+	margin:0 0 0 35px;
+	min-width:400px;
+	padding:28px 0 0 26px;
+	font-weight:normal;
+	font-size:1.8em;
+	background:transparent url("../img/backgroundTitleBg.png") no-repeat 0 0;
+}
+
+#searchResults .searchResultsHeader.recommendations h2 {
+	background-position-y:-720px;
+}
+
+#searchResults .searchResultsHeader .filter {
+	float:right;
+	font-size:1.4em;
+	margin:2em 2em 0 0;
+}
+
+#searchResults .searchResultsHeader .filter span {
+	color: #c61d1d;
+}
+
+#searchResults .searchResultsHeader span.found {
+	margin-right:1.6em;
+	color:#000;
+}
+
+#searchResultsSortPicker {
+	display:none;
+	list-style:none;
+	position:absolute;
+	right:49px;
+	width:151px;
+	height:116px;
+	font-size:13px;
+	background: url("../img/sortPickerMenuBg.png") no-repeat bottom left;
+	z-index:100;
+}
+
+#searchResultsSortPicker li {
+	margin:0;
+	padding:2px 20px 0 12px;
+	width:119px;
+	cursor:pointer;
+	color:#1f322d;
+	line-height:21px;
+}
+
+#searchResultsSortPicker li:hover {
+	color:#1f322d;
+	font-weight:bold;
+	line-height:19px;
+	background: url("../img/sortPickerMenuHoverBg.png") no-repeat bottom left;
+	border-top:1px solid #ccddd5;
+	border-bottom:1px solid #ccddd5;
+}
+
+#searchResultsSortPickerSelection {
+	line-height:1.8em;
+	display:inline-block;
+	width:151px;
+	height:24px;
+	margin-left: 10px;
+	padding:2px 8px 0 8px;
+	color:#000 !important;
+	font-size:14px;
+	background:url("../img/sortPickerBg.png") no-repeat 0 0;
+	cursor:pointer;
+}
+
+#searchResultsSortPickerSelection.open {
+	background:url("../img/sortPickerBg.png") no-repeat 0 -26px;
+}
+
+#searchResults .searchResultsMore,
+#searchResults .recommendationsMore {
+	margin:0 0 20px 46px;
+	color:#000;
+	font-size:1.4em;
+}
+
+#searchResults .movie .starRating {
+	display:block;
+	width:102px;
+	height:18px;
+	margin:9px auto;
+}
+
+/* ---------- movie thumbnail ---------- */
+
+.movie {
+	display:inline-block;
+	width:180px;
+	height:250px;
+	padding-top:16px;
+	color:#000;
+	text-align:center;
+	background:url("../img/movieBgLarge.png") no-repeat 50% 10px;
+	margin:0;
+}
+
+.movie .title {
+	white-space: nowrap;
+	height: 1.2em;
+	max-width: 160px;
+	display: inline-block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	-webkit-text-overflow: ellipsis;
+}
+
+.movie .boxArt {
+	display:block;
+	position:relative;
+}
+
+.movie .boxArt img {
+	display:block;
+	margin:8px auto;
+	width:110px;
+	height:150px;
+}
+
+.movie .boxArt img.gloss {
+	display:none;
+}
+
+.movie .addButton {
+	display:block;
+	height:33px;
+	width: 120px;
+	margin:6px auto 0 auto;
+	background-image:url("../img/movieButtonsLarge.png");
+	background-repeat:no-repeat;
+	background-position:0 -10px;
+}
+
+.movie .addButton:hover {
+	cursor:pointer;
+	background-position: 0 -60px;
+}
+.movie .addButton.instant {
+	background-position:0 -1590;
+}
+.movie .addButton.instant:hover {
+	background-position:0 -1627;
+}
+.movie .addButton.instant.inQueue {
+	background-position:0 -1920;
+}
+.movie .addButton.instant.inQueue:hover {
+	background-position:0 -1970;
+}
+.movie .addButton.inQueue {
+	background-position:0 -333px;
+}
+.movie .addButton.inQueue:hover {
+	background-position:0 -383px;
+}
+.movie .addButton.atHome {
+	background-position:0 -1331px;
+}
+.movie .addButton.atHome:hover {
+	background-position:0 -1381px;
+}
+.notLoggedIn .movie .addButton{
+	display:none;
+}
+/* ---------- search results list ---------- */
+
+#searchResultsList {
+	padding:70px 0 10px 4px;
+}
+
+#searchResultsList .movie {
+	display:block;
+	clear:left;
+	position:relative;
+	width:100%;
+	text-align:left;
+	background:url("../img/movieBgSmall.png") no-repeat 15px 5px;
+	font-size:1.1em;
+	height:auto;
+	min-height:205px;
+}
+
+#searchResultsList .movie .thumb {
+	display:block;
+	position:absolute;
+	margin-left:16px;
+	width:128px;
+}
+
+#searchResultsList .movie .thumb .boxArt img {
+	width:79px;
+	height:107px;
+	cursor:pointer;
+}
+
+#searchResultsList .movie .thumb .addButton {
+	display:block;
+	height:33px;
+	width: 87px;
+	margin:6px auto 0 auto;
+	background-position: 0 -857px;
+}
+
+#searchResultsList .movie .thumb .addButton:hover {
+	background-position: 0 -907px;
+}
+#searchResultsList .movie .thumb .addButton.instant {
+	background-position:0 -1668;
+}
+#searchResultsList .movie .thumb .addButton.instant:hover {
+	background-position:0 -1718;
+}
+#searchResultsList .movie .thumb .addButton.instant.inQueue {
+	background-position:0 -1835px;
+}
+#searchResultsList .movie .thumb .addButton.instant.inQueue:hover {
+	background-position:0 -1875px;
+}
+#searchResultsList .movie .thumb .addButton.inQueue {
+	background-position:0 -1237px;
+}
+#searchResultsList .movie .thumb .addButton.inQueue:hover {
+	background-position:0 -1287px;
+}
+#searchResultsList .movie .thumb .addButton.atHome {
+	background-position:0 -1424px;
+}
+#searchResultsList .movie .thumb .addButton.atHome:hover {
+	background-position:0 -1474px;
+}
+.notLoggedIn #searchResultsList .movie .thumb .addButton{
+	display:none;
+}
+
+#searchResultsList .movie .info {
+	display:block;
+	position:absolute;
+	left:150px;
+	right:8px;
+	padding-top:7px;
+	-webkit-user-select:text;
+}
+
+#searchResultsList .movie .info .title {
+	font-size:1.2em;
+	max-width:none;
+	overflow:visible;
+	text-decoration:underline;
+	cursor:pointer;
+}
+
+#searchResultsList .movie .info .releaseYear {
+	margin-left:20px;
+	font-size:.9em;
+}
+
+#searchResultsList .movie .info .rating {
+	display:inline;
+	margin-left:8px;
+	font-size:.8em;
+}
+
+#searchResultsList .movie .info .synopsis {
+	margin-top:10px;
+	padding-right:240px;
+	max-width:580px;
+}
+
+#searchResultsList .movie .info .genre {
+	margin-top:10px;
+}
+
+#searchResultsList .movie .info div span {
+	padding-right:1ex;
+}
+
+
+/* ---------- rating widget ---------- */
+
+#ratingWidgetTemplateNode {
+	display:none;
+}
+
+.movie .starRating {
+	display:block;
+	width:125px;
+	height:18px;
+	margin:9px auto;
+}
+
+.starRating:hover {
+	cursor:pointer;
+}
+
+.starRating .unrate,
+.starRating .star {
+	display:inline-block;
+	margin:0;
+	padding:0;
+	width:18px;
+	height:18px;
+	text-indent:-9999em;
+}
+
+.starRating.hovering .unrate,
+.starRating.hovering .star {
+	background-position-y:0 !important;
+}
+
+.starRating .unrate {
+	background-position-x:-54px !important;
+	margin-right:5px;
+}
+
+.starRating.user .star{
+	background-position-y:0;
+}
+
+.starRating.predicted .star{
+	background-position-y:-18px;
+}
+
+.starRating.average .star{
+	background-position-y:-36px;
+}
+
+.starRating .unrate,
+.starRating .star {
+	background:url("../img/ratingsStars.png") no-repeat;
+}
+
+.starRating .star.empty {
+	background-position-x:-36px;
+}
+
+.starRating .star.half {
+	background-position-x:-18px;
+}
+
+.starRating .star.full {
+	background-position-x:0;
+}
+
+.starRating.nonFirst {
+	display:block;
+	position:relative;
+	left:-17px;
+	background:url("../img/ratingsSeriesBg.png") no-repeat 2px 0 !important;
+	width:112px;
+	height:19px;
+}
+
+.starRating.nonFirst span {
+	background:none !important;
+}
+
+/* TODO: get the interaction for these intuitive and correct */
+.starRating .unrate {
+	visibility:hidden !important;
+	width:1px !important;
+	cursor:default !important;
+}
+
+/* ---------- movie list-specific styles ---------- */
+
+#artworkList .movie:hover {
+	background:url("../img/movieBgLargeHover.png") no-repeat 50% 12px;
+}
+
+#artworkList .movie .title:hover,
+#artworkList .movie .boxArt:hover {
+	cursor:pointer;
+}
+
+#artworkList .movie:hover img.gloss {
+	position:absolute;
+	top:0;
+	left:35px;
+	margin:0;
+	display:block
+}
+
+.notLoggedIn #artworkList .movie .title:hover,
+.notLoggedIn #artworkList .movie .boxArt:hover {
+	cursor:default !important;
+}
+
+/* ---------- movie info tooltip ---------- */
+
+#movieInfoTooltipNode {
+	display:none;
+	position:absolute;
+	z-index:100;
+	margin:-70px -12px -60px -12px;
+	padding:22px 22px 23px 22px;
+	background:url("../img/tooltipBgTop.png") no-repeat 22px top,
+	           url("../img/tooltipBgBottom.png") no-repeat 22px bottom;
+}
+
+#movieInfoTooltipNode.noArt {
+	margin:-30px -12px 0 -10px;
+}
+
+#movieInfoTooltipNode .arrow {
+	width:60px;
+	height:60px;
+	position:absolute;
+	z-index:101;
+}
+
+#movieInfoTooltipNode.right .arrow {
+	background:url("../img/tooltipArrowLeft.png") no-repeat;
+	left:0;
+}
+
+#movieInfoTooltipNode.left .arrow {
+	background:url("../img/tooltipArrowRight.png") no-repeat;
+	right:0;
+}
+
+#movieInfoTooltipNode.top .arrow {
+	top:54px;
+}
+
+#movieInfoTooltipNode.bottom .arrow {
+	bottom:44px;
+}
+
+#movieInfoTooltipNode.top.left .arrow {
+	top:102px;
+}
+
+#movieInfoTooltipNode.top.left.noArt .arrow {
+	top:54px;
+}
+
+#movieInfoTooltipNode .container {
+	margin:0;
+	padding:0 12px;
+	background:url("../img/tooltipBgSides.png") repeat-y left top;
+}
+
+#movieInfoTooltipContentNode {
+	margin:0;
+	padding:0 18px 4px 18px;
+	background:#eaeaea url("../img/tooltipBg.png") repeat-x left top;
+	width:220px;
+	color:#333;
+}
+
+#movieInfoTooltipNode h2 {
+	font-weight:100;
+	color:#fff;
+	margin:0;
+	padding:4px 0 0 0;
+	white-space: nowrap;
+}
+
+#movieInfoTooltipNode h2 span {
+	display:inline-block;
+	margin-right:.25em;
+	font-size:1.25em;
+	white-space: nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	-webkit-text-overflow:ellipsis;
+	max-width:146px;
+}
+
+#movieInfoTooltipNode.noArt h2 span {
+	max-width:190px;
+}
+
+#movieInfoTooltipNode.noArt .boxArt {
+	display:none;
+}
+
+#movieInfoTooltipNode .boxArt {
+	float:right;
+	width:46px;
+	height:68px;
+}
+
+#movieInfoTooltipNode .boxArt img {
+	position:absolute;
+	top:0;
+	right:0;
+	margin:9px 15px 0 0;
+	z-index:101;
+}
+
+#movieInfoTooltipNode .boxArt img.gloss {
+	margin:-6px 0 0 0;
+	z-index:102;
+}
+
+#movieInfoTooltipNode .synopsis {
+	margin:1.75em 0 .5em 0;
+}
+
+#movieInfoTooltipNode .details {
+	border-bottom:1px solid #ccc;
+	float:left;
+	padding:.8em 0;
+	width:100%;
+}
+
+#movieInfoTooltipNode .details tr {
+	height:1.6em;
+	vertical-align:top;
+}
+
+#movieInfoTooltipNode .details tr td {
+	font-weight:bold;
+	padding-left:.25em;
+}
+
+#movieInfoTooltipNode .details tr td span {
+	display:inline-block;
+	float:left;
+	margin-right:.2em;
+}
+
+#movieInfoTooltipNode .notShown {
+	display:none;
+}
+
+#movieInfoTooltipNode .starRatings {
+	clear:left;
+	padding-top:.5em;
+	border-top:1px solid #fff;
+}
+
+#movieInfoTooltipNode .starRatings div {
+	padding-top:8px;
+	line-height:18px;
+	clear:left;
+	text-align:right;
+}
+
+#movieInfoTooltipNode .starRatings span {
+	background:url("../img/ratingsStarsStatic.png") no-repeat left top;
+	display:block;
+	float:left;
+	height:18px;
+	margin-top:-2px;
+}
+
+#movieInfoTooltipNode .userRating,
+#movieInfoTooltipNode .predictedRating {
+	font-weight:bold;
+	font-size:1.1em;
+}
+
+#movieInfoTooltipNode .averageRating {
+	font-size:.875em;
+}
+
+#movieInfoTooltipNode .predictedRating span {
+	background-position-y:-18px;
+}
+
+#movieInfoTooltipNode .averageRating span {
+	background-position-y:-36px;
+}
+
+
+/* ---------- sync confirm dialog ---------- */
+
+.dojoxDialog {
+	-webkit-border-radius:0;
+	border:none !important;
+	padding:8px !important;
+	background:url("../img/dialogBorder.png") repeat left top !important;
+	color:#f0f0f0 !important;
+}
+
+.dojoxDialog .dojoxDialogPaneContent {
+	background:url("../img/appBgGloss.jpg") no-repeat left -200px !important;
+}
+
+#syncConfirmDialogNode .dojoxDialogCloseIcon {
+	display:none !important;
+}
+
+#syncConfirmDialogNode #syncProgressNode {
+	display:none;
+	position:relative;
+}
+
+#syncConfirmDialogNode #syncQuestionNode,
+#syncConfirmDialogNode #syncProgressNode {
+	padding:4px 24px 16px 16px;
+}
+
+#syncConfirmDialogNode #syncQuestionNode p,
+#syncConfirmDialogNode #syncProgressNode p {
+	font-size:1.2em;
+}
+
+#syncConfirmDialogNode .synchronizeButton,
+#syncConfirmDialogNode .discardButton {
+	float:left;
+	margin:0px 5px 15px 23%;
+	height:31px;
+	width:120px;
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -2011;
+	cursor:pointer;
+}
+
+#syncConfirmDialogNode .discardButton {
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -2108;
+	margin:0px 0px 15px 5px;
+}
+
+#syncConfirmDialogNode .synchronizeButton:hover {
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -2061;
+}
+
+#syncConfirmDialogNode .discardButton:hover {
+	background:url("../img/movieButtonsLarge.png") no-repeat 0 -2158;
+}
+
+#syncConfirmDialogNode .progressBar {
+	position:absolute;
+	bottom:15px;
+	width:91%;
+	height:8px;
+	background-color:transparent;
+	border:1px solid #333;
+	border-top-color:#444;
+}
+
+#syncConfirmDialogNode #progressNode {
+	width:0;
+	height:8px;
+	background:url("../img/progressBarBg.png") repeat-x top left;
+}
+
+/* ---------- movie info dialog ---------- */
+
+#movieInfoDialogNode h2 {
+	font-size:2em;
+	font-weight:normal;
+	padding:6px 0 0 15px;
+	margin:0;
+	border-right:10px solid #fff;
+	color:#222;
+	background-color:#fff;
+}
+
+#movieInfoDialogNode h2.G {
+	background:#fff url("../img/ratings/G.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.PG {
+	background:#fff url("../img/ratings/PG.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.PG-13 {
+	background:#fff url("../img/ratings/PG-13.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.R {
+	background:#fff url("../img/ratings/R.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.NC-17 {
+	background:#fff url("../img/ratings/NC-17.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.TV-14-V {
+	background:#fff url("../img/ratings/TV-14-V.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.TV-G {
+	background:#fff url("../img/ratings/TV-G.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.TV-MA {
+	background:#fff url("../img/ratings/TV-MA.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.TV-PG {
+	background:#fff url("../img/ratings/TV-PG.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.TV-Y {
+	background:#fff url("../img/ratings/TV-Y.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.TV-Y7-FV {
+	background:#fff url("../img/ratings/TV-Y7-FV.gif") no-repeat right 50%;
+}
+#movieInfoDialogNode h2.TV-Y7 {
+	background:#fff url("../img/ratings/TV-Y7.gif") no-repeat right 50%;
+}
+
+
+#movieInfoDialogNode h2 span {
+	color:#999;
+	font-size:.75em;
+}
+
+
+#movieInfoDialogNode .movie {
+	margin-left:20px;
+	padding-top:24px;
+	position:absolute;
+	left:0;
+	top:46px;
+	background-position:0 4px;
+}
+
+#movieInfoDialogNode .info {
+	position:absolute;
+	top:46px;
+	right:8px;
+	width:560px;
+	height:412px;
+	padding-right:40px;
+	overflow-y:auto;
+	-webkit-user-select:text;
+}
+
+#movieInfoDialogNode .info div {
+	margin-top:1.6em;
+}
+
+#movieInfoDialogNode .info div.synopsis {
+	font-size:1.2em;
+	margin-top:30px;
+}
+
+#movieInfoDialogNode .info div span {
+	padding-right:1ex;
+}
+
+#movieInfoDialogNode .info div ul {
+	list-style:none;
+	width:330px;
+}
+
+#movieInfoDialogNode .info div ul li {
+	display:inline-block;
+	margin-right:30px;
+	min-width:130px;
+}
+
+#movieInfoDialogNode {
+}
+
+#movieInfoDialogNode .starRating.nonFirst {
+	display:block;
+	position:relative;
+	left:-12px;
+	background:url("../img/ratingsSeriesBg.png") no-repeat 2px -19px !important;
+	width:112px;
+	height:19px;
+}

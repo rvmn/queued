@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<application xmlns="http://ns.adobe.com/air/application/1.0">
+	<id>com.sitepen.Queued</id>
+	<filename>Queued</filename>
+	<name>Queued</name>
+	<description>An AIR Application for managing your Netflix queue, brought to you by SitePen, Inc.</description>
+	<version>1.0</version>
+	<copyright>2009 SitePen, Inc.  All Rights Reserved.</copyright>
+
+	<initialWindow>
+		<content>Queued.html</content>
+		<title>Queued, brought to you by SitePen, Inc.</title>
+		<systemChrome>standard</systemChrome>
+		<transparent>false</transparent>
+		<visible>true</visible>
+		<width>935</width>
+		<height>700</height>
+		<x>20</x>
+		<y>20</y>
+		<minimizable>true</minimizable>
+		<maximizable>true</maximizable>
+		<minSize>850 636</minSize>
+		<resizable>true</resizable>
+	</initialWindow>
+	<icon>
+		<image16x16>img/icon/AIRApp_16.png</image16x16>
+		<image32x32>img/icon/AIRApp_32.png</image32x32>
+		<image48x48>img/icon/AIRApp_48.png</image48x48>
+		<image128x128>img/icon/AIRApp_128.png</image128x128>
+	</icon>
+</application>

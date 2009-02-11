@@ -1,0 +1,163 @@
+html, body{
+	height:100%;
+	overflow:hidden;
+	margin:0;
+	padding:0;
+}
+body{
+	-webkit-user-select:none;
+}
+#abs{
+	position:absolute;
+	
+}
+#abs.top{
+	top:40px;
+}
+#abs.bottom{
+	bottom:40px;
+}
+#mContent{
+	position:relative;
+	z-index:5;
+	width:400px;
+}
+#miniAtHome{
+	width:400px;
+	padding:3px;
+	font-family:Arial, Helvetica, sans-serif;
+}
+#miniAtHome.bottom{
+	position:absolute;
+	bottom:0px;
+}
+#miniAtHome #mHead{
+	position:absolute;
+	height:50px;
+	z-index:100;
+	width:390px;
+}
+
+#miniAtHome #mLogo{
+	display:block;
+	float:left;
+	margin-top:3px;
+	background:url("../img/miniNFLogo.png") no-repeat top left;
+	width:52px;
+	height:52px;
+	margin-right:7px;
+}
+#rTitle,
+#miniAtHome h1{
+	color:#fff;
+	display:block;
+	float:left;
+	font-size:15px;
+	margin:29px 0 0 0 ;
+	padding:0;
+}
+#rTitle{
+	color:#ff0000;
+	background:#ffff00;
+}
+#miniAtHome input{
+	height:20px;
+	float:right;
+	margin:29px 0 0 0;
+	padding:0 5px;
+	color:#4e4e4e;
+	outline:none;
+	background:url("../img/miniSearchBg.png") repeat-x top left;
+	border:1px solid #000;
+	-webkit-border-radius:11px;
+}
+#miniAtHome input.selected{
+	color:#000;
+	font-style:normal;
+}
+#miniAtHome #close{
+	display:block;
+	float:right;
+	width:20px;
+	height:20px;
+	text-align:center;
+	background:url("../img/miniCloseButton.png") no-repeat top left;
+	margin:23px 9px 0 12px;
+	cursor:pointer;
+}
+#miniAtHome .list{
+	background:#1b0c0c url("../img/miniAtHomeBg.png") repeat-x top left;
+	width:370px;
+	margin: 0 auto 10px auto;
+	padding-bottom:2px;
+	-webkit-border-radius:9px;
+	position:relative;
+	top:20px;
+	padding-top:40px;
+	opacity:.9;
+}
+#miniAtHome .list .mRow{
+	min-height:56px;
+	clear:both;
+	color:#363636;
+	margin:0 7px 4px 7px;
+	padding:8px;
+	background:#ececec;
+	border:1px solid #202020;
+	-webkit-border-radius:9px;
+}
+
+#miniAtHome .list .mRow .mPic{
+	display:block;
+	float:left;
+	width:40px;
+	height:54px;
+	border:1px solid #333;
+	margin-right:7px;
+}
+#miniAtHome .list .mRow .mTitle{
+	display:block;
+	width:286px;
+	margin:5px 0;
+	font-size:12px;
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	-webkit-text-overflow:ellipsis;	
+}
+#miniAtHome .list .mRow .mShip,
+#miniAtHome .list .mRow .mArr{
+	display:block;
+	margin-top:8px;
+	width:100%;
+	font-size:10px;
+}
+#miniAtHome .list .mRow .mArr{
+	margin-top:5px;
+}
+
+/****** short rows (received) ******/
+#miniAtHome .list .midTitle{
+	font-weight:bold;
+	color:#fff;
+	font-size:15px;
+	margin:10px;
+}
+#miniAtHome .list .mRow.short .mTitle{
+	width:340px;
+	margin:-5px 5px 0 0;
+	font-weight:bold;
+	font-size:12px;
+	color:#fff;
+	float:left;
+}
+#miniAtHome .list .mRow.short{
+	min-height:5px;
+	background:#343434;
+}
+#miniAtHome .list .noitems{
+	margin-left:20px;
+	font-style:italic;
+	font-size:12px;
+	color:#fff;
+}
