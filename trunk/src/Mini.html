@@ -1,0 +1,252 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>Queued At Home</title>
+
+		<link rel="stylesheet" href="css/Mini.css"/>
+		
+		<script src="js/dojo.js"></script>
+
+		<script>
+			dojo.require("dijit._base.place");
+			dojo.require("dojo.fx.easing");
+			
+			console.log(navigator)
+			var isMac = navigator.platform.toLowerCase().indexOf("mac")>-1;
+			
+			window.recss = function(){
+				var i,a,s;a=document.getElementsByTagName('link');
+				for(i=0;i<a.length;i++){
+					s=a[i];
+					if(s.rel.toLowerCase().indexOf('stylesheet')>=0&&s.href) {
+						var h=s.href.replace(/(&|%5C?)forceReload=\d+/,'');
+						s.href=h+(h.indexOf('?')>=0?'&':'?')+'forceReload='+new Date().valueOf();
+					}
+				}
+			}
+			
+			// Catching key so that ReCSS works with cmd/cntrl - r
+			// You can also hook up a button and call recss()
+			var cDown = false;
+			dojo.connect(document, "keypress", 	function(evt){
+				if(cDown && evt.keyCode==114){ // r
+					recss();
+				}
+			});
+			dojo.connect(document, "keydown", 	function(evt){ 
+				//COMAND - 15,  CTRL - 17
+				if(evt.keyCode==15||evt.keyCode==17){
+					cDown = true;	
+				}
+			});
+			dojo.connect(document, "keyup", 	function(evt){
+				if(evt.keyCode==15||evt.keyCode==17){
+					cDown = false;	
+				}
+			});
+			
+			var devList = [
+				{
+					art:{small:""},
+					title:"My Movie",
+					dates:{
+						shipped:"12/12/12",
+						estimated_arrival:"11/11/11"
+					}
+				},{
+					art:{small:""},
+					title:"My Movie",
+					dates:{
+						shipped:"12/12/12",
+						estimated_arrival:"11/11/11"
+					}
+				},{
+					art:{small:""},
+					title:"My Movie",
+					dates:{
+						shipped:"12/12/12",
+						estimated_arrival:"11/11/11"
+					}
+				}
+			];
+			//
+			// initalize variables
+			var defaultValue = "Find Movies", snode, app, titleNode, rTitleNode;
+			var noItemsStr = '<div class="mRow short"><span class="noitems">No Items.</span></div>'
+			
+			onClose = function(){
+				
+				if (window.opener) {
+					window.opener.qd.app.systray.hideMini();
+				}else{
+					animate("close");
+				}
+			};
+			
+			doSubmit = function(){
+				console.log("SEARCH...", snode.value);
+				app.systray.doSearch(snode.value);
+				return false;
+			};
+			
+			checkDefault = function(evt){
+				console.log(evt.type+" "+evt.target.value);
+				if(evt.type=="click"){
+					if(evt.target.value==defaultValue){
+						evt.target.value = "";
+						dojo.addClass(evt.target, "selected");
+					}
+				}else if(evt.type=="blur"){
+					if(evt.target.value==""){
+						evt.target.value = defaultValue;
+						dojo.removeClass(evt.target, "selected");
+					}
+				}
+			};
+			
+			dojo.addOnLoad(function(){
+				// NOTE:
+				//	We are using a different instance of dojo in this window
+				//	than of the app. We also don't have access to AIR (by design)
+				if(!isMac){
+					dojo.byId("abs").className = "bottom";
+				}
+				titleNode = dojo.query("h1", dojo.byId("mHead"))[0];
+				rTitleNode = dojo.byId("rTitle");
+				console.log(titleNode)
+				snode = dojo.byId("searchField");
+				snode.value=defaultValue;
+				dojo.connect(snode, "click", checkDefault);
+				dojo.connect(snode, "blur", checkDefault);
+				
+				if(window.opener){
+					app = window.opener.qd.app;
+					window.opener.qd.app.systray.onWinLoad(window);
+					//document.onmousedown = function() { window.nativeWindow.startMove(); }
+				}else{
+					// if !window.opener, we are in 'dev' mode
+					// viewing this window outside the scope of
+					// the Queued app.
+					//
+					// DEV MODE
+					//
+					//atHome(devList);
+					//shipped(devList);
+					//received(devList);
+					//shippedAndReceived(devList, devList);
+					//
+					// test no items:
+					atHome();
+					animate("open");
+				}
+				
+				
+
+			});
+			
+			animate = function(closeOpen){
+				var h = dojo.marginBox("miniAtHome").h;
+				var isOpen = closeOpen=="open",
+					beg = isMac
+						? isOpen ? '-'+(h+50):'20' // Mac 		// above the screen to below the top
+						: isOpen ? -h-50+'':'40',   // Windows	// below the screen to above the taskbar
+						
+					end = isMac
+						? isOpen ? '20' : '-'+(h+50)   //Mac	// below the top to above the screen
+						: isOpen ? '40' : -h-50+'',  //Windows	// above the taskbar to below the screen
+						
+					type = "back",
+					ease = isOpen ? dojo.fx.easing[type+"Out"] : dojo.fx.easing[type+"In"];
+				dojo.animateProperty({
+					node:"abs",
+					duration:500,
+					easing:ease,
+					properties: isMac ? 
+							{top: { start: beg, end: end, unit:"px" }}
+						: 	{bottom: { start: beg, end: end, unit:"px" }}
+				}).play();
+				//console.log("BEG:", beg, "END:", end)
+			}
+			
+			window._homeOrShipped = function(items){
+				if (items && items.length) {
+					var str = "";
+					dojo.forEach(items, function(m){
+						str +=	'<div class="mRow">'
+									+'<div class="mPic"><img class="mPic" src="'+m.title.art.small+'" /></div>'
+									+'<div class="mTitle">'+m.title.title+'</div>'
+									+'<div class="mShip">Shipped: '+m.shipped+'</div>'
+									+'<div class="mArr">Est Arrival: '+m.estimatedArrival+'</div>'
+								+'</div>';
+					});
+					dojo.byId("mList").innerHTML = str;
+					
+				}else{
+					dojo.byId("mList").innerHTML = noItemsStr;
+				}
+			};
+			window.atHome = function(items){
+				titleNode.innerHTML = "At Home";
+				_homeOrShipped(items);
+			}
+			window.shippedAndReceived = function(sItems, rItems){
+				console.log("mini shippedAndReceived:", sItems, rItems)
+				shipped(sItems);
+				received(rItems, true);
+			}
+			window.shipped = function(items){
+				titleNode.innerHTML = "On the Way";
+				_homeOrShipped(items);
+			}
+			window.received = function(items, shipAndRec){
+				if(!shipAndRec){
+					titleNode.innerHTML = "Netflix Received";	
+				}
+				if (items && items.length) {
+					var str = "";
+					if (shipAndRec) {
+						str += '<div class="midTitle">Netflix Received</div>';
+					}
+					dojo.forEach(items, function(m){
+						str +=	'<div class="mRow short">'
+									+'<div class="mTitle">'+m.title.title+'</div>'
+								+'</div>';
+					});
+					
+					dojo.byId("mList").innerHTML = shipAndRec ? dojo.byId("mList").innerHTML+=str : str;
+					
+				}else{
+					dojo.byId("mList").innerHTML = noItemsStr;
+				}
+			};
+			
+		</script>
+	</head>
+	<body>
+		<div id="abs" class="top">
+			<div id="miniAtHome">
+				<div id="mContent">
+					
+					<div id="mHead">
+						<div id="mLogo"></div>
+						<h1>At Home</h1>
+						<div id="close" onclick="onClose();"></div>
+						<form onsubmit="doSubmit(); return false;">
+						<input id="searchField" type="text" />
+						</form>
+					
+					</div>
+					<!--
+					<div id="rTitle" class="list" style="display:none;">Netflix Received</div>
+					-->
+					
+					<div id="mList" class="list">
+						<span class="noitems">No Items.</span>
+					</div>
+								
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
