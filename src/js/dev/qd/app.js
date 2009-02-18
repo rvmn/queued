@@ -171,15 +171,20 @@ qd.app = new (function(){
 	//	set up the application updater.
 	var updater;
 	dojo.addOnLoad(dojo.hitch(this, function(){
-		updater = new runtime.air.update.ApplicationUpdaterUI();
-		updater.configurationFile = new air.File("app:/updateConfig.xml");
-		updater.addEventListener("initialized", function(evt){
-			//	let the app finish it's thing first, then go hit for updates.
-			setTimeout(function(){
-				updater.checkNow();
-			}, 15000);
-		});
-		updater.initialize();
+		try{
+			updater = new runtime.air.update.ApplicationUpdaterUI();
+			updater.configurationFile = new air.File("app:/updateConfig.xml");
+			updater.addEventListener("initialized", function(evt){
+				//	let the app finish it's thing first, then go hit for updates.
+				setTimeout(function(){
+					updater.checkNow();
+				}, 15000);
+			});
+			updater.initialize();
+		} catch(ex){
+			//	swallow this error; for some reason Linux doesn't like
+			//	the application updater.
+		}
 	}));
 
 	//	END APP EVENTS

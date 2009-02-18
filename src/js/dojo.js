@@ -2387,7 +2387,7 @@ dojo.subscribe = function(/*String*/ topic, /*Object|null*/ context, /*String|Fu
 	//		The name of a function in context, or a function reference. This is the function that
 	//		is invoked when topic is published.
 	//	example:
-	//	|	dojo.subscribe("alerts", null, function(caption, message){ alert(caption + "\n" + message); };
+	//	|	dojo.subscribe("alerts", null, function(caption, message){ alert(caption + "\n" + message); });
 	//	|	dojo.publish("alerts", [ "read this", "hello world" ]);																	
 
 	// support for 2 argument invocation (omitting context) depends on hitch
@@ -5571,11 +5571,7 @@ if(dojo.isIE || dojo.isOpera){
 			doc = refNode.ownerDocument;
 		}
 		if(d.isString(tag)){
-			try{
-				tag = doc.createElement(tag);
-			}catch(e){
-				tag = dojo._toDom(tag);
-			}
+			tag = doc.createElement(tag);
 		}
 		if(attrs){ d.attr(tag, attrs); }
 		if(refNode){ d.place(tag, refNode, pos); }
@@ -5857,54 +5853,6 @@ dojo.provide("dojo._base.NodeList");
 		//			reduce
 		//			reduceRight
 
-		_stash: function(/* dojo.NodeList */nl){
-			// summary: Stash this NodeList on the next NodeList returned
-			//  	so .end() has somewhere to go.
-			//
-			// example:
-			//	A Partially redundant example. Make an "odd" method which returns a
-			//	stashed `dojo.NodeList`: 
-			//	|	dojo.extend(dojo.NodeList, {
-			//	|		odd: function(){
-			//	|			return this._stash(this.filter(function(n,i){ return i % 2 == 0 }));
-			//	|		}
-			//	|	});
-			//  |	// then see how _stash applies a sub-list, to be .end()'ed out of
-			//	|   dojo.query(".foo")
-			//	|		.odd()
-			//	|			.addClass("stripe")
-			//	|		.end()
-			//	|		// access to the orig .foo list
-			//	|		.removeClass("foo")
-			//  | 
-			//
-			nl.__last = this;
-			return nl; // dojo.NodeList
-		},
-		
-		end: function(){
-			// summary: Break out of this current depth of chaining, returning
-			//		to the last most sequential NodeList, or this.
-			//
-			// description:
-			//		Break out of this current depth of chaining, returning 
-			//		to the last most sequential NodeList (or this NodeList if no
-			//		previous NodeList was stashed). Works in conjunction with
-			//		`dojo.NodeList._stash` to control a NodeList in advanced ways.
-			//
-			// example:
-			//	|	dojo.query("a")
-			//	|		.wrap("div", true)
-			//	|			// connect click to the divs
-			//	|			.onclick(function(e){ .. }))
-			//	|			.addClass("onADiv")
-			//	|		.end()
-			//	|		// jump back to the list of anchors
-			//  |		.style(...)
-			//
-			return this.__last || this; // dojo.NodeList
-		},
-
 		slice: function(/*===== begin, end =====*/){
 			// summary:
 			//		Returns a new NodeList, maintaining this one in place
@@ -5954,70 +5902,6 @@ dojo.provide("dojo._base.NodeList");
 			return tnl(a.splice.apply(this, a));
 		},
 
-		wrap: function(/*String*/ nodeType, /*dojo.NodeList?*/ newList){
-			// summary:
-			// 		Wrap a list of nodes in a nodeType, returning this
-			// 		NodeList, or a new `dojo.NodeList` of the newly created
-			// 		elements by setting a parameter
-			//
-			// description:
-			//		So this makes the most sense in the single-node list, but
-			//		applies and works by creating an element for each node in
-			//		the list, and wrapping it in the created node. 
-			//
-			// nodeType: String
-			//		An element to create. eg: "div", "li", "a", etc.
-			//
-			// newList: Boolean?
-			//		If true, a new NodeList is returned from this call.  If
-			//		false, null, or omitted this NodeList is returned
-			//
-			// example:
-			//		Wrap an additional DIV element around all DIVs with class="foo",
-			//		and connect a function to the click event to the wrapper node:
-			//
-			//	|	dojo.query("div.foo").wrap("div").onclick(function(e){
-			//	|		console.log('clicked', e.target); 
-			//	|	});
-			//
-			//	returns: A NodeList of the wrapping elements or This same NodeList
-			var nl = new d.NodeList();
-			this.forEach(function(n){
-				var element = d.create(nodeType);
-				d.place(element, n, "before");
-				d.place(n, element, "first");
-				nl.push(element);
-			});
-			return !newList ? this : this._stash(nl); // dojo.NodeList
-		},
-
-		create: function(/*String*/ tagName, /*Object?*/ attrs){
-			// summary:
-			// 		Create a new element for each of the nodes in this list
-			// 		returning a new NodeList of the newly selected nodes.  The
-			// 		returned list is a stashed-NodeList, and will return from
-			// 		and .end() call back to the original NodeList.
-			//
-			//	tagName: String
-			//		A type of node to create. eg: "div", "a", "li"
-			// example:
-			//	|	dojo.query("li.tooltip")
-			//	|		.create("div", { tabIndex: -1 })
-			//	|			.place("ul#bar")
-			//	|			.addClass("tooltip")
-			//	|		.end()
-			//	|		.removeClass("tooltip")
-			//	|		.onclick(function(e){
-			//	|			// handle click for the node
-			//	|		})
-			//	|	;
-			return this._stash(
-				this.map(function(){
-					return d.create(tagName, attrs);
-				})
-			); // dojo.NodeList
-		},
-		
 		concat: function(/*===== item =====*/){
 			// summary:
 			//		Returns a new NodeList comprised of items in this NodeList
@@ -6214,14 +6098,12 @@ dojo.provide("dojo._base.NodeList");
 
 		place: function(/*String||Node*/ queryOrNode, /*String*/ position){
 			//	summary:
-			//		Similar to other toolkit's "appendTo".  Places elements of
-			//		this node list relative to the first element matched by
-			//		queryOrNode. Returns the original NodeList. See:
-			//		`dojo.place`. 
+			//		places elements of this node list relative to the first element matched
+			//		by queryOrNode. Returns the original NodeList. See: `dojo.place`
 			//	queryOrNode:
-			//		may be a string representing any valid CSS3 selector or a
-			//		DOM node.  In the selector case, only the first matching
-			//		element will be used for relative positioning.
+			//		may be a string representing any valid CSS3 selector or a DOM node.
+			//		In the selector case, only the first matching element will be used 
+			//		for relative positioning.
 			//	position:
 			//		can be one of:
 			//		|	* "last" (default)
@@ -6231,9 +6113,6 @@ dojo.provide("dojo._base.NodeList");
 			//		|	* "only"
 			//		|	* "replace"
 			// 		or an offset in the childNodes property
-			// 	example:
-			// 		put selected items from a list into some other list
-			//	| 	dojo.query("li.clicked").place("ul#otherList");
 			var item = d.query(queryOrNode)[0];
 			return this.forEach(function(i){ d.place(i, item, position); }); // dojo.NodeList
 		},
@@ -6445,34 +6324,10 @@ dojo.provide("dojo._base.NodeList");
 			//		One or more 0-based indices of items in the current NodeList.
 			//	returns:
 			//		dojo.NodeList
-			var nl = new d.NodeList();
-			d.forEach(arguments, function(i){
-				if(this[i]){ nl.push(this[i]); }
-			}, this);
-			return nl; // dojo.NodeList
-		},
-
-		children: function(/* String? */tag){
-			// summary:
-			// 		Return a new `dojo.NodeList` of children 
-			//		of the nodes in this current list. 
-			//		
-			// tag: String?
-			//		A selector to match for children, defaults to *
-			return this._stash(this.query(tag || "*")); // dojo.NodeList
-		},
-	
-		parent: function(){
-			// summary:
-			// 		Retruns a new `dojo.NodeList` of the parent nodes
-			//		of the nodes in this current list. 
-			var nl = this._stash(new d.NodeList());
-			this.forEach(function(n){
-				nl.push(n.parentNode);
-			})
+			var nl = new dojo.NodeList();
+			dojo.forEach(arguments, function(i) { if(this[i]) { nl.push(this[i]); } }, this);
 			return nl; // dojo.NodeList
 		}
-		
 
 	});
 
@@ -13049,21 +12904,21 @@ dojo.declare("dijit._Widget", null, {
 	// summary:
 	//		Base class for all dijit widgets. 	
 
-	// id: String
-	//		a unique, opaque ID string that can be assigned by users or by the
+	// id: [const] String
+	//		A unique, opaque ID string that can be assigned by users or by the
 	//		system. If the developer passes an ID which is known not to be
 	//		unique, the specified ID is ignored and the system-generated ID is
 	//		used instead.
 	id: "",
 
-	// lang: String
+	// lang: [const] String
 	//		Rarely used.  Overrides the default Dojo locale used to render this widget,
 	//		as defined by the [HTML LANG](http://www.w3.org/TR/html401/struct/dirlang.html#adef-lang) attribute.
 	//		Value must be among the list of locales specified during by the Dojo bootstrap,
 	//		formatted according to [RFC 3066](http://www.ietf.org/rfc/rfc3066.txt) (like en-us).
 	lang: "",
 
-	// dir: String
+	// dir: [const] String
 	//		Unsupported by Dijit, but here for completeness.  Dijit only supports setting text direction on the
 	//		entire document.
 	//		Bi-directional support, as defined by the [HTML DIR](http://www.w3.org/TR/html401/struct/dirlang.html#adef-dir)
@@ -13079,21 +12934,21 @@ dojo.declare("dijit._Widget", null, {
 	style: "",
 
 	// title: String
-	//		HTML title attribute
+	//		HTML title attribute, used to specify the title of tabs, accordion panes, etc.
 	title: "",
 
-	// srcNodeRef: DomNode
+	// srcNodeRef: [readonly] DomNode
 	//		pointer to original dom node
 	srcNodeRef: null,
 
-	// domNode: DomNode
+	// domNode: [readonly] DomNode
 	//		This is our visible representation of the widget! Other DOM
 	//		Nodes may by assigned to other properties, usually through the
 	//		template system's dojoAttachPoint syntax, but the domNode
 	//		property is the canonical "top level" node in widget UI.
 	domNode: null,
 
-	// containerNode: DomNode
+	// containerNode: [readonly] DomNode
 	//		Designates where children of the source dom node will be placed.
 	//		"Children" in this case refers to both dom nodes and widgets.
 	//		For example, for myWidget:
@@ -13118,7 +12973,7 @@ dojo.declare("dijit._Widget", null, {
 	//		is null for widgets that don't, like TextBox.
 	containerNode: null,
 
-	// attributeMap: Object
+	// attributeMap: [protected] Object
 	//		attributeMap sets up a "binding" between attributes (aka properties)
 	//		of the widget and the widget's DOM.
 	//		Changes to widget attributes listed in attributeMap will be 
@@ -13152,7 +13007,7 @@ dojo.declare("dijit._Widget", null, {
 	//		- "" --> { node: "domNode", type: "attribute" }
 	attributeMap: {id:"", dir:"", lang:"", "class":"", style:"", title:""},
 
-	// _deferredConnects: Object
+	// _deferredConnects: [protected] Object
 	//		attributeMap addendum for event handlers that should be connected only on first use
 	_deferredConnects: {
 		onClick: "",
@@ -13175,6 +13030,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of mouse click events.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onDblClick: dijit._connectOnUseEventHandler,
@@ -13184,6 +13041,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of mouse double click events.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onKeyDown: dijit._connectOnUseEventHandler,
@@ -13193,6 +13052,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of keys being pressed down.
 		// event:
 		//		key Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onKeyPress: dijit._connectOnUseEventHandler,
@@ -13202,6 +13063,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of printable keys being typed.
 		// event:
 		//		key Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onKeyUp: dijit._connectOnUseEventHandler,
@@ -13211,6 +13074,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of keys being released.
 		// event:
 		//		key Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onMouseDown: dijit._connectOnUseEventHandler,
@@ -13220,6 +13085,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of when the mouse button is pressed down.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onMouseMove: dijit._connectOnUseEventHandler,
@@ -13229,6 +13096,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of when the mouse moves over nodes contained within this widget.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onMouseOut: dijit._connectOnUseEventHandler,
@@ -13238,6 +13107,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of when the mouse moves off of nodes contained within this widget.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onMouseOver: dijit._connectOnUseEventHandler,
@@ -13247,6 +13118,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of when the mouse moves onto nodes contained within this widget.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onMouseLeave: dijit._connectOnUseEventHandler,
@@ -13256,6 +13129,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of when the mouse moves off of this widget.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onMouseEnter: dijit._connectOnUseEventHandler,
@@ -13265,6 +13140,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of when the mouse moves onto this widget.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 	onMouseUp: dijit._connectOnUseEventHandler,
@@ -13274,10 +13151,15 @@ dojo.declare("dijit._Widget", null, {
 		//		Connect to this function to receive notifications of when the mouse button is released.
 		// event:
 		//		mouse Event
+		// tags:
+		//		callback
 	},
 	=====*/
 
 	// Constants used in templates
+	
+	// _blankGif: [protected] URL
+	//		Used by <img> nodes in templates that really get there image via CSS background-image
 	_blankGif: (dojo.config.blankGif || dojo.moduleUrl("dojo", "resources/blank.gif")),
 
 	//////////// INITIALIZATION METHODS ///////////////////////////////////////
@@ -13285,6 +13167,8 @@ dojo.declare("dijit._Widget", null, {
 	postscript: function(/*Object?*/params, /*DomNode|String*/srcNodeRef){
 		// summary:
 		//		Kicks off widget instantiation.  See create() for details.
+		// tags:
+		//		private
 		this.create(params, srcNodeRef);
 	},
 
@@ -13325,6 +13209,8 @@ dojo.declare("dijit._Widget", null, {
 		// * postCreate:
 		//	|	* a stub function that you can over-ride to modify take
 		//		actions once the widget has been placed in the UI
+		// tags:
+		//		private
 
 		// store pointer to original dom tree
 		this.srcNodeRef = dojo.byId(srcNodeRef);
@@ -13407,6 +13293,8 @@ dojo.declare("dijit._Widget", null, {
 		//		It processes the attributes in the attribute map first, ant then
 		//		it goes through and processes the attributes for the _setXXXAttr
 		//		functions that have been specified
+		// tags:
+		//		private
 		var condAttrApply = function(attr, scope){
 			if( (scope.params && attr in scope.params) || scope[attr]){
 				scope.attr(attr, scope[attr]);
@@ -13428,6 +13316,8 @@ dojo.declare("dijit._Widget", null, {
 		//		but before the widget template is instantiated. Especially
 		//		useful to set properties that are referenced in the widget
 		//		template.
+		// tags:
+		//		protected
 	},
 
 	buildRendering: function(){
@@ -13435,12 +13325,16 @@ dojo.declare("dijit._Widget", null, {
 		//		Construct the UI for this widget, setting this.domNode.  Most
 		//		widgets will mixin `dijit._Templated`, which implements this
 		//		method.
+		// tags:
+		//		protected
 		this.domNode = this.srcNodeRef || dojo.create('div');
 	},
 
 	postCreate: function(){
 		// summary:
 		//		Called after a widget's dom has been setup
+		// tags:
+		//		protected
 	},
 
 	startup: function(){
@@ -13464,7 +13358,7 @@ dojo.declare("dijit._Widget", null, {
 		//		If true, this method will leave the original Dom structure
 		//		alone of descendant Widgets. Note: This will NOT work with
 		//		dijit._Templated widgets.
-		//
+
 		this.destroyDescendants(preserveDom);
 		this.destroy(preserveDom);
 	},
@@ -13500,7 +13394,9 @@ dojo.declare("dijit._Widget", null, {
 		//		If true, this method will leave the original Dom structure alone
 		//		during tear-down. Note: this will not work with _Templated
 		//		widgets yet. 
-		
+		// tags:
+		//		protected
+
 		if(this.bgIframe){
 			this.bgIframe.destroy(preserveDom);
 			delete this.bgIframe;
@@ -13543,6 +13439,8 @@ dojo.declare("dijit._Widget", null, {
 		// summary:
 		//		Stub function. Override to implement custom widget tear-down
 		//		behavior.
+		// tags:
+		//		protected
 		return false;
 	},
 
@@ -13550,21 +13448,38 @@ dojo.declare("dijit._Widget", null, {
 
 	onFocus: function(){
 		// summary:
-		//		Stub function. Override or connect to this method to receive
-		//		notifications for when the widget moves into focus.
+		//		Called when the widget becomes "active" because
+		//		it or a widget inside of it either has focus, or has recently
+		//		been clicked.
+		// tags:
+		//		callback
 	},
 
 	onBlur: function(){
 		// summary:
-		//		Stub function. Override or connect to this method to receive
-		//		notifications for when the widget moves out of focus.
+		//		Called when the widget stops being "active" because
+		//		focus moved to something outside of it, or the user
+		//		clicked somewhere outside of it, or the widget was
+		//		hidden.
+		// tags:
+		//		callback
 	},
 
 	_onFocus: function(e){
+		// summary:
+		//		This is where widgets do processing for when they are active,
+		//		such as changing CSS classes.  See onFocus() for more details.
+		// tags:
+		//		protected
 		this.onFocus();
 	},
 
 	_onBlur: function(){
+		// summary:
+		//		This is where widgets do processing for when they stop being active,
+		//		such as changing CSS classes.  See onBlur() for more details.
+		// tags:
+		//		protected
 		this.onBlur();
 	},
 
@@ -13572,6 +13487,8 @@ dojo.declare("dijit._Widget", null, {
 		// summary:
 		//		Called when someone connects to one of my handlers.
 		//		"Turn on" that handler if it isn't active yet.
+		// tags:
+		//		private
 		if(event in this._deferredConnects){
 			var mapNode = this[this._deferredConnects[event]||'domNode'];
 			this.connect(mapNode, event.toLowerCase(), this[event]);
@@ -13580,6 +13497,10 @@ dojo.declare("dijit._Widget", null, {
 	},
 
 	_setClassAttr: function(/*String*/ value){
+		// summary:
+		//		Custom setter for the CSS "class" attribute
+		// tags:
+		//		protected
 		var mapNode = this[this.attributeMap["class"]||'domNode'];
 		dojo.removeClass(mapNode, this["class"])
 		this["class"] = value;
@@ -13594,6 +13515,8 @@ dojo.declare("dijit._Widget", null, {
 		// description:
 		//		Determines which node to set the style on based on style setting
 		//		in attributeMap.
+		// tags:
+		//		protected
 
 		var mapNode = this[this.attributeMap["style"]||'domNode'];
 		
@@ -13614,19 +13537,26 @@ dojo.declare("dijit._Widget", null, {
 	},
 
 	setAttribute: function(/*String*/ attr, /*anything*/ value){
+		// summary:
+		//		Deprecated.  Use attr() instead.
+		// tags:
+		//		deprecated
 		dojo.deprecated(this.declaredClass+"::setAttribute() is deprecated. Use attr() instead.", "", "2.0");
 		this.attr(attr, value);
 	},
 	
 	_attrToDom: function(/*String*/ attr, /*String*/ value){
-		//	summary:
+		// summary:
 		//		Reflect a widget attribute (title, tabIndex, duration etc.) to
 		//		the widget DOM, as specified in attributeMap.
 		//
-		//	description:
+		// description:
 		//		Also sets this["attr"] to the new value.
 		//		Note some attributes like "type"
 		//		cannot be processed this way as they are not mutable.
+		//
+		// tags:
+		//		private
 
 		var commands = this.attributeMap[attr];
 		dojo.forEach( dojo.isArray(commands) ? commands : [commands], function(command){
@@ -13734,6 +13664,9 @@ dojo.declare("dijit._Widget", null, {
 		// summary:
 		//		Helper function for Widget.attr().
 		//		Caches attribute name values so we don't do the string ops every time.
+		// tags:
+		//		private
+
 		var apn = this._attrPairNames;
 		if(apn[name]){ return apn[name]; }
 		var uc = name.charAt(0).toUpperCase() + name.substr(1);
@@ -13788,6 +13721,8 @@ dojo.declare("dijit._Widget", null, {
 		//		Search subtree under root, putting found widgets in outAry
 		// directOnly:
 		//		If false, return widgets nested inside other widgets
+		// tags:
+		//		private
 		var list = dojo.isIE ? root.children : root.childNodes, i = 0, node;
 		while(node = list[i++]){
 			if(node.nodeType != 1){ continue; }
@@ -13804,7 +13739,9 @@ dojo.declare("dijit._Widget", null, {
 		}
 	},
 
-	// TODOC
+	// nodesWithKeyClick: [private] String[]
+	//		List of nodes that correctly handle click events via native browser support,
+	//		and don't need dijit's help
 	nodesWithKeyClick: ["input", "button"],
 
 	connect: function(
@@ -13828,6 +13765,8 @@ dojo.declare("dijit._Widget", null, {
 		//	|	btn.connect(foo, "bar", function(){ 
 		//	|		console.debug(this.toString());
 		//	|	});
+		// tags:
+		//		protected
 
 		var d = dojo;
 		var dco = d.hitch(d, "connect", obj);
@@ -13874,6 +13813,8 @@ dojo.declare("dijit._Widget", null, {
 		// summary:
 		//		Disconnects handle created by this.connect.
 		//		Also removes handle from this widget's list of connects
+		// tags:
+		//		protected
 		for(var i=0; i<this._connects.length; i++){
 			if(this._connects[i]==handles){
 				dojo.forEach(handles, dojo.disconnect);
@@ -13886,6 +13827,8 @@ dojo.declare("dijit._Widget", null, {
 	isLeftToRight: function(){
 		// summary:
 		//		Checks the page for text direction
+		// tags:
+		//		protected
 		return dojo._isBodyLtr(); //Boolean
 	},
 
@@ -14569,7 +14512,7 @@ dojo.declare("dijit._Templated",
 		//		declared in markup inside it?  False by default.
 		widgetsInTemplate: false,
 
-		// skipNodeCache: Boolean
+		// _skipNodeCache: Boolean
 		//		If using a cached widget template node poses issues for a
 		//		particular widget class, it can set this property to ensure
 		//		that its template is always re-built from a string
@@ -23561,6 +23504,8 @@ dojo.provide("dojox.dtl._base");
 
 
 
+dojo.experimental("dojox.dtl");
+
 (function(){
 	var dd = dojox.dtl;
 
@@ -23930,6 +23875,18 @@ dojo.provide("dojox.dtl._base");
 				if(path == "null" || path == "None"){ return null; }
 				parts = path.split(".");
 				current = context.get(parts[0]);
+
+				if(dojo.isFunction(current)){
+					var self = context.getThis && context.getThis();
+					if(current.alters_data){
+						current = "";
+					}else if(self){
+						current = current.call(self);
+					}else{
+						current = "";
+					}
+				}
+
 				for(var i = 1; i < parts.length; i++){
 					var part = parts[i];
 					if(current){
