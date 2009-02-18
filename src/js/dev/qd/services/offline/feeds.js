@@ -49,16 +49,26 @@ dojo.provide("qd.services.offline.feeds");
 	}
 
 	dojo.mixin(qd.services.offline.feeds, {
+		//	summary:
+		//		The offline-based service for fetching cached Netflix public RSS feeds.
 		list: function(){
-		  return rssFeeds.top25;
+			//	summary:
+			//		Return the list of top 25 feeds.
+			return rssFeeds.top25;
 		},
 		top100: function(){
+			//	summary:
+			//		Return the top 100 feed.
 			return rssFeeds.top100;
 		},
 		newReleases: function(){
+			//	summary:
+			//		Return the New Releases feed.
 			return rssFeeds.newReleases;
 		},
-		fetch: function(/* Object */kwArgs){
+		fetch: function(/* qd.services.online.feeds.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the given feed information out of the database cache.
 			var dfd = util.prepare(kwArgs), feed = getFeedObject(kwArgs.url);
 			if(feed && feed.xml){
 				var xml = new DOMParser().parseFromString(feed.xml, "text/xml");
@@ -72,7 +82,7 @@ dojo.provide("qd.services.offline.feeds");
 			} else {
 				dfd.errback(new Error("qd.service.feeds.fetch: there is no XML cache for this feed."), feed.term);
 			}
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();

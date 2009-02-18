@@ -27,6 +27,8 @@ dojo.require("qd.services.authorization");
 
 	qd.services._forceCreate = false;
 	qd.services.init = function(){
+		//	summary:
+		//		Initialize the Queued services.
 		pwd = storage.item(dbProp);
 		if(!pwd){
 			//	generate a new password for the database service and store it.
@@ -51,13 +53,13 @@ dojo.require("qd.services.authorization");
 		//		work for *any* object in the system, not just
 		//		titles.
 		if(dojo.isString(item)){
-			return registry[item] || null;
+			return registry[item] || null;	//	Object
 		}
 
 		//	assume it's an object.
 		if(item && !item.guid){
 			console.warn("qd.services.item: the passed item has no guid!", item);
-			return null;
+			return null;	//	Object
 		}
 
 		var tmp = registry[item.guid];
@@ -69,17 +71,19 @@ dojo.require("qd.services.authorization");
 		if(item.title){
 			titleRegistry[item.title] = item;
 		}
-		return item;
+		return item;	//	Object
 	};
 
 	qd.services.itemByTerm = function(/* String */term){
 		//	summary:
 		//		Find any objects in the registry based on a title.
 		//		If found, return it.
-		return titleRegistry[term];
+		return titleRegistry[term];	//	Object
 	};
 
 	qd.services.clearItems = function(){
+		//	summary:
+		//		Clear out any in-memory items that have been cached.
 		registry = {};
 		titleRegistry = {};
 	};

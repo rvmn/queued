@@ -166,7 +166,8 @@ dojo.require("qd.services.online.user");
 			}, 2000);
 		},
 		onSyncNeeded: function(/* Integer */n){
-			//	stub for connecting to for the sync process.
+			//	summary:
+			//		stub for connecting to for the sync process.
 		},
 		synchronize: function(){
 			//	summary:
@@ -178,6 +179,8 @@ dojo.require("qd.services.online.user");
 			//		Stub for when the synchronization process is complete.
 		},
 		onSyncItemStart: function(/* String */prompt){
+			//	summary:
+			//		Stub for when an item is about to be executed.
 		},
 		onSyncItemComplete: function(){
 			//	summary:

@@ -5,7 +5,14 @@ dojo.provide("qd.services.util");
 		reDecEntity=/&#([^;]+);/g;
 
 	dojo.mixin(qd.services.util, {
-		prepare: function(args, d){
+		//	summary:
+		//		A set of utility methods used throughout the Queued service layers.
+		prepare: function(/* Object */args, /* dojo.Deferred? */d){
+			//	summary:
+			//		Prepare any deferred (or create a new one) and set
+			//		up the callback/errback pair on it.  args.result
+			//		is the callback, args.error is the errback.  Used
+			//		primarily by the communication services (online/offline).
 			var dfd = d || new dojo.Deferred();
 			if(args.result){
 				dfd.addCallback(function(data, ioArgs){
@@ -17,19 +24,24 @@ dojo.provide("qd.services.util");
 					args.error.call(args, evt, ioArgs);
 				});
 			}
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		mixin: function(dest, override){
-			// Custom mixin function to stamp the properties from override
-			// onto dest without clobbering member objects as you would in
-			// a shallow copy like dojo.mixin does; this isn't particularly
-			// robust or fast, but it works for our movie objects.
+
+		mixin: function(/* Object */dest, /* Object */override){
+			//	summary:
+			//		Custom mixin function that is considered "additive", as
+			//		opposed to simply overriding.
+			//	description:
+			// 		Custom mixin function to stamp the properties from override
+			// 		onto dest without clobbering member objects as you would in
+			// 		a shallow copy like dojo.mixin does; this isn't particularly
+			// 		robust or fast, but it works for our title and queue item objects.
 			//
-			// The basic property handling rules are:
-			// 	- null doesn't overwrite anything, ever
-			// 	- scalars get overwritten by anything, including new scalars
-			// 	- arrays get overwritten by longer arrays or by objects
-			// 	- objects get merged by recursively calling mixin()
+			// 		The basic property handling rules are:
+			// 			- null doesn't overwrite anything, ever
+			// 			- scalars get overwritten by anything, including new scalars
+			// 			- arrays get overwritten by longer arrays or by objects
+			// 			- objects get merged by recursively calling mixin()
 			for(k in override){
 				if(override[k] === null || override[k] === undefined){ continue; }
 				if(dojo.isArray(override[k])){
@@ -52,14 +64,22 @@ dojo.provide("qd.services.util");
 				}
 				else{
 					if(dest[k] === null || (!dojo.isArray(dest[k]) && !dojo.isObject(dest[k]))){
-						dest[k] = override[k];
+						if(!dest[k]){
+							dest[k] = override[k];
+						} else if (dest[k] && override[k] && dest[k] != override[k]){
+							dest[k] = override[k];
+						}
 					}
 				}
 			}
-			return dest;
+			return dest;	//	Object
 		},
-		clean: function(str){
-			return str.replace(reHexEntity, function(){
+		clean: function(/* String */str){
+			//	summary:
+			//		Pull out any HTML tags and replace any HTML entities with the
+			//		proper characters.  Used primarily for the description/synopsis
+			//		of a title coming from one of the Netflix public RSS feeds.
+			return str.replace(reHexEntity, function(){		//	String
 					return String.fromCharCode(parseInt(arguments[1],16));
 				})
 				.replace(reDecEntity, function(){
@@ -71,6 +91,8 @@ dojo.provide("qd.services.util");
 				.replace(/<[^>]*>/g, "");
 		},
 		image: {
+			//	summary:
+			//		Helper functions for caching images for offline.
 			url: function(url){
 				//	summary:
 				//		Return the best url for the image.
@@ -80,9 +102,9 @@ dojo.provide("qd.services.util");
 				if(file.exists){
 					return file.url;
 				}
-				return url;
+				return url;	//	String
 			},
-			store: function(/* String */url){
+			store: function(url){
 				//	summary:
 				//		Return the best url for the image.
 				//	url: String
@@ -124,7 +146,7 @@ dojo.provide("qd.services.util");
 
 				//	load the URL.
 				l.load(u);
-				return dfd;
+				return dfd;	//	dojo.Deferred
 			}
 		}
 	});

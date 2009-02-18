@@ -48,18 +48,36 @@ dojo.provide("qd.services.online.feeds");
 	}
 
 	dojo.mixin(qd.services.online.feeds, {
-		//	this object is used to get and cache any of the public RSS feeds
-		//	available from Netflix.
+		//	summary:
+		//		The online-based service for handling Netflix's public RSS feeds.
 		list: function(){
-			return rssFeeds.top25;
+			//	summary:
+			//		Return the list of Top 25 RSS feeds.
+			return rssFeeds.top25;	//	Object[]
 		},
 		top100: function(){
-			return rssFeeds.top100;
+			//	summary:
+			//		Return the top 100 feed object.
+			return rssFeeds.top100;	//	Object
 		},
 		newReleases: function(){
-			return rssFeeds.newReleases;
+			//	summary:
+			//		Return the New Releases feed object.
+			return rssFeeds.newReleases;	//	Object
 		},
-		fetch: function(/* Object */kwArgs){
+		/*=====
+		qd.services.online.feeds.fetch.__FetchArgs = function(url, result, error){
+			//	summary:
+			//		Keyword object for getting the contents of an RSS feed.
+			//	url: String
+			//		The URL of the feed to fetch.
+			//	result: Function?
+			//		The callback to be fired when the RSS feed has been fetched and parsed.
+			//	error: Function?
+			//		The errback function to be fired if there is an error during the course of the fetch.
+		}
+		=====*/
+		fetch: function(/* qd.services.online.feeds.fetch.__FetchArgs */kwArgs){
 			//	summary:
 			//		Fetch the feed at the url in the feed object, and
 			//		store/cache the feed when returned.
@@ -93,7 +111,7 @@ dojo.provide("qd.services.online.feeds");
 					dfd.errback(new Error("qd.service.feeds.fetch: an error occurred when trying to get " + kwArgs.url));
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();

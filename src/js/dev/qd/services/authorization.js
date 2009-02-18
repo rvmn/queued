@@ -1,20 +1,14 @@
 dojo.provide("qd.services.authorization");
-
 dojo.require("dojox.io.OAuth");
 
-//	takes the place of qd.oauth's handshake process.
 (function(){
 	var auth = qd.services.authorization;
 	
 	auth.request = function(){
 		//	summary:
-		//		In the event of a new user, we need to
-		//		request a user's access token.  This is
-		//		done through a non-standard handshake 
-		//		process.
-		//
-		//		Based on Mike Wilcox's original oauth
-		//		handshake.
+		//		In the event of a new user, we need to request a user's access token.  This is
+		//		done through a non-standard handshake process. Based on Mike Wilcox's original 
+		//		oauth handshake.
 
 		var dfd = new dojo.Deferred(),
 			token = qd.app.authorization;
@@ -23,20 +17,16 @@ dojo.require("dojox.io.OAuth");
 			url: "http://api.netflix.com/oauth/request_token",
 			handleAs: "text",
 			error: function(err, ioArgs){
-				console.warn("qd.services.authorization.request: error getting initial request token.");
-				console.error(ioArgs.xhr.responseText);
 				dfd.errback("auth", ioArgs.xhr.responseText);
 			},
 			load: function(response, ioArgs){
 				//	this should force us to open the window for the Netflix auth handshake.
-				console.log("qd.services.authorization.request: initial handshake complete.");
 				var a = response.split("&"),
 					o = {};
 				dojo.forEach(a, function(item){
 					var pair = item.split("=");
 					o[pair[0]] = unescape(pair[1]);
 				});
-				console.log("Initial handshake items: ", o);
 
 				var url = "http://api-user.netflix.com/oauth/login?"
 					+ "application_name=" + o.application_name
@@ -64,7 +54,6 @@ dojo.require("dojox.io.OAuth");
 				var v = setInterval(function(){
 					var wurl = win1._window.location;
 					if(wurl != url){
-						console.log("Handshake window URL change: ", wurl);
 						if(!seenOnce && wurl=="https://api-user.netflix.com/oauth/login"){
 							seenOnce = true;
 							return;
@@ -74,11 +63,9 @@ dojo.require("dojox.io.OAuth");
 							return;
 						}
 						else if(wurl.indexOf("Failed")>0){
-							console.warn("Bad username or password in the handshake window.");
 							//	TODO: fire off the errback and kill the timer?
 							return;
 						}
-						console.warn("Handshake succeeded.");
 						clearInterval(v);
 						v = null;
 						win1.close();
@@ -86,7 +73,6 @@ dojo.require("dojox.io.OAuth");
 				}, 1000);
 				var c2 = dojo.connect(win1, "onClose", function(){
 					if(v){
-						console.warn("User did not try to authorize!");
 						dfd.errback("user");
 						clearInterval(v);
 						dojo.disconnect(c2);
@@ -98,11 +84,9 @@ dojo.require("dojox.io.OAuth");
 						url: "http://api.netflix.com/oauth/access_token",
 						handleAs: "text",
 						error: function(err, ioArgs){
-							console.error(ioArgs.xhr.responseText);
 							dfd.errback("auth");
 						},
 						load: function(response, ioArgs){
-							console.warn("ACCESS GRANTED: ", response);
 							var a = response.split("&"), o = {};
 							dojo.forEach(a, function(item){
 								var p = item.split("=");
@@ -117,6 +101,6 @@ dojo.require("dojox.io.OAuth");
 		};
 
 		dojo.xhrGet(dojox.io.OAuth.sign("GET", kwArgs, token), false);
-		return dfd;
+		return dfd;		//	dojo.Deferred
 	};
 })();

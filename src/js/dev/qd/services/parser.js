@@ -2,10 +2,8 @@ dojo.provide("qd.services.parser");
 dojo.require("dojo.date.locale");
 
 (function(){
-	//	generic XML parsing services for Queued.
-	//	Can take most of the XML available from Netflix
-	//	and return JSON objects from them.
-	
+ 	//	summary:
+	//		A set of objects used to parse any XML returned by the Netflix API.
 	var util = qd.services.util;
 	
 	//	TITLES
@@ -94,12 +92,8 @@ dojo.require("dojo.date.locale");
 		return ret;
 	}
 
-	function parseDate(/* String */tenDijitStr){
-		// summary:
-		//		XML helper.
-		//	description:
-		//		Converts netflix date string into a date object
-		return dojo.date.locale.format(new Date(Number(tenDijitStr+"000")), {selector:"date", datePattern:"MM/dd/yy"}); // Date
+	function parseDate(tenDijitStr){
+		return dojo.date.locale.format(new Date(Number(tenDijitStr+"000")), {selector:"date", datePattern:"MM/dd/yy"});
 	}
 
 	function parseScreenFormats(nl){
@@ -133,7 +127,6 @@ dojo.require("dojo.date.locale");
 	}
 
 	function parseAudio(nl){
-		//	this is ugly.
 		var ret = {};
 		for(var i=0, l=nl.length; i<l; i++){
 			var node = nl[i], tfnode;
@@ -164,6 +157,8 @@ dojo.require("dojo.date.locale");
 	// public functions
 	var p = qd.services.parser;
 	p.titles = {
+		//	summary:
+		//		The XML parser for any title information (movie, TV show, etc.)
 		fromRss: function(/* XmlNode */node, /* Object? */obj){
 			//	summary:
 			//		Parse basic movie information from the passed RSS element.
@@ -210,8 +205,6 @@ dojo.require("dojo.date.locale");
 				info = node.ownerDocument.evaluate("./*[name()!='link']", node),
 				currentNode;
 			
-			//	TODO: pull the queue info out of the resulting object!
-			//	fill out the info first.
 			while(currentNode = info.iterateNext()){
 				switch(currentNode.tagName){
 					case "id":
@@ -260,11 +253,6 @@ dojo.require("dojo.date.locale");
 						else if (scheme == "genres"){
 							o.categories.push(currentNode.getAttribute("term"));
 						}
-						/*
-						else if (scheme == "queue_availability"){
-							o.queue_availability = currentNode.getAttribute("term");
-						}
-						*/
 						break;
 					case "user_rating":
 						var val = currentNode.getAttribute("value");
@@ -371,7 +359,8 @@ dojo.require("dojo.date.locale");
 		},
 		
 		setType: function(/* Object */o){
-			//	post-process to find a "type"
+			//	summary:
+			//		Post-process a parsed title to set a type on it.
 			if(o.guid.indexOf("discs")>-1){
 				o.type = "disc";
 			}
@@ -392,7 +381,12 @@ dojo.require("dojo.date.locale");
 	};
 
 	p.queues = {
+		//	summary:
+		//		The XML parser for queue information (discs, instant, saved, rental history)
 		fromXml: function(/* XmlNode */node, /* Object? */obj){
+			//	summary:
+			//		Parse the returned XML into an object to be used by the application.
+			
 			//	object representing a queue item.  Note that the title info is
 			//	deliberately limited.
 			var item = {
@@ -476,11 +470,13 @@ dojo.require("dojo.date.locale");
 			if(obj){
 				item = util.mixin(obj, item);
 			}
-			return item;
+			return item;	//	Object
 		}
 	};
 
 	p.users = {
+		//	summary:
+		//		The XML parser for any user information
 		fromXml: function(/* XmlNode */node, /* Object? */obj){
 			//	summary:
 			//		Return a user object from the passed xml node.
@@ -523,6 +519,8 @@ dojo.require("dojo.date.locale");
 	};
 
 	p.people = {
+		//	summary:
+		//		The XML parser for any information on a person (actors, directors, etc.)
 		fromXml: function(/* XmlNode */node, /* Object? */obj){
 			//	summary:
 			//		Parse the information out of the passed XmlNode for people.
@@ -558,6 +556,8 @@ dojo.require("dojo.date.locale");
 	};
 
 	p.status = {
+		//	summary:
+		//		The XML parser for any status-based updates (modifying a queue, ratings, etc.)
 		fromXml: function(/* XmlNode */node){
 			//	summary:
 			//		Parse the status info out of the passed node.
@@ -600,7 +600,7 @@ dojo.require("dojo.date.locale");
 					}
 				}
 			}
-			return obj;
+			return obj;	//	Object
 		}
 	};
 })();

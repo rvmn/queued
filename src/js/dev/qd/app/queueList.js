@@ -9,6 +9,8 @@ dojo.require("dojo.dnd.Source");
 	var REMOVAL_CONFIRMATION_TIMER_DURATION = 5000; // milliseconds to show the keep/remove button
 
 	var create = function(tagName, text, _class, parent){
+		//	summary:
+		//		Development helper to create nodes.
 
 		var node = dojo.doc.createElement(tagName);
 
@@ -22,7 +24,13 @@ dojo.require("dojo.dnd.Source");
 
 	var _reg = new RegExp(/\$\{.*?\}/gi);
 
-	var makeTemplate = function(str, item, dbg){
+	var makeTemplate = function(/* String */str, /* Object */item){
+		//	summary:
+		//		Build a queue DOM template from the given string, using
+		//		simple ${variable} substitution.
+		//	item:
+		//		Netflix item to use for template variables, which should be
+		//		named properties on the object.
 		var tpl = "";
 		var props = [];
 		dojo.forEach(str.match(_reg), function(p){
@@ -115,13 +123,16 @@ dojo.require("dojo.dnd.Source");
 							+ '</span>'
 						+ '</div></td>'
 					+ '</tr>',
-		
+
 		noItems: '<tr class="listQueuedRow noItems">'
 							+ '<td colspan="${colspan}">There are no items in this list.</td>'
 						+ '</tr>'
 	};
 
 	qd.app.nonItem = function(){
+		//	summary:
+		//		Initialize a queue to show the "No items found" display rather
+		//		than a table full of items.
 		this.item = {};
 		this.constructor = function(options, parentNode){
 			dojo.mixin(this, options);
@@ -139,7 +150,7 @@ dojo.require("dojo.dnd.Source");
 		};
 		this.constructor.apply(this, arguments);
 	};
-	
+
 	qd.app.queueItem = function(){
 		this.id = "";
 		this.item = {};
@@ -147,7 +158,7 @@ dojo.require("dojo.dnd.Source");
 		this.type = "";
 		this.parent = null;
 		this.resetFormat = "";
-		
+
 		this.__defineGetter__("position", function() {
 			return this.item.position;
 		});
@@ -159,11 +170,16 @@ dojo.require("dojo.dnd.Source");
 			}
 		});
 
-		this.constructor = function(options, parentNode){
+		this.constructor = function(/* Object */options, /* Node */parentNode){
+			//	summary:
+			//		Build up a queue item (one row in the display), instantiate
+			//		the item in the DOM, etc.
+			//	options:
+			//		Property bag to use as a mixin on this queue item.
+			//	parentNode:
+			//		Node in which to insert this queue item into the DOM.
 			dojo.mixin(this, options);
-			
-			//console.log(" ---- ", this.item.title.title, this.type, " item::", this.item)
-			
+
 			this.id = this.item.id;
 			this.guid = this.item.guid;
 			this.item.genreStr = this.item.title.categories[0];
@@ -195,7 +211,11 @@ dojo.require("dojo.dnd.Source");
 		};
 
 		this.postDom = function(){
-			//console.warn("POSTDOM", this.position, this.item.position)
+			//	summary:
+			//		Trigger function to execute after the queue item's DOM
+			//		representation is added to the page. Sets up the textbox
+			//		containing the item's position and registers the key
+			//		handlers for it.
 			if (this.textbox) {
 				this.textbox.value = this.position;
 				this.textbox.maxLength = 3;
@@ -204,7 +224,6 @@ dojo.require("dojo.dnd.Source");
 						return true;
 					}
 					var k = evt.keyCode;
-					//console.log("press:", k, evt.keyIdentifier, evt);
 					if (k > 31 && (k < 48 || k > 57)) {
 						dojo.stopEvent(evt);
 						return false;
@@ -214,8 +233,15 @@ dojo.require("dojo.dnd.Source");
 			}
 		};
 
-		this.setRatingData = function(user, pred, avg){
-		//	console.log ("item.set rating", ((this.ratingNode)?"true":"false"));
+		this.setRatingData = function(/* Number */user, /* Number */pred, /* Number */avg){
+			//	summary:
+			//		Create the star rating widget for this queue item.
+			//	user:
+			//		The user rating value (1-5, "not_interested", "no_opinion").
+			//	pred:
+			//		The predicted rating value (1-5, "not_interested", "no_opinion").
+			//	avg:
+			//		The member average rating value (1-5, "not_interested", "no_opinion").
 			var node=this.ratingNode, type="average", rating=0;
 			if(node) {
 				if(user > 0){
@@ -233,8 +259,11 @@ dojo.require("dojo.dnd.Source");
 			}
 		};
 
-		this.attachEvents = function(node){
-			//console.log("item attachEvents")
+		this.attachEvents = function(/* Node */node){
+			//	summary:
+			//		Register event connections defined in the queue item's template.
+			//	node:
+			//		The item's DOM node.
 			this.domNode = node;
 			var nodes = this.domNode.getElementsByTagName("*");
 			dojo.forEach(nodes, function(n){
@@ -252,35 +281,41 @@ dojo.require("dojo.dnd.Source");
 		};
 
 		this.destroy = function(){
+			//	summary: Tear down the queue item.
 			dojo.forEach(this._connects, dojo.disconnect, dojo);
 			dojo._destroyElement(this.domNode);
 			delete this;
 		};
 
-		this.update = function(newItem){
+		this.update = function(/* Object */newItem){
 			// summary:
-			//		New item returned from server
-			//		Usually just new position
+			//		New item returned from server (usually just the new position).
 			this.item = newItem;
 		};
 
 		this.reset = function(){
 			// summary:
-			//		If the server call is unsuccessful
-			//		do any resetting here
+			//		If the server call is unsuccessful, do any resetting here.
 			this.textbox.value = this.position;
-			console.log("reset", this.resetFormat, this.selFormat)
 			if(this.resetFormat){
 				setTimeout(dojo.hitch(this, function(){
 					this.item.preferredFormatStr = this.resetFormat;
 					this.resetFormat = "";
 					this.selFormat.value =this.selFormat.selected = this.item.preferredFormatStr;
-					console.warn("RESET!", this.item.preferredFormatStr, this.selFormat.value, this.selFormat.selected)
 				}), 500)
 			}
 		};
 
-		function toggleRemoveButtonState(outNode, inNode, duration){
+		function toggleRemoveButtonState(/* Node */outNode, /* Node */inNode, /* Number? */duration){
+			//	summary:
+			//		Animated toggle to switch back and forth between the
+			//		"(-)" (delete) and "Remove | Keep" queue item buttons.
+			//	outNode:
+			//		Button node to fade out.
+			//	inNode:
+			//		Button node to fade in.
+			//	duration:
+			//		Optional duration in milliseconds. Default 200.
 			dojo.style(inNode, {display:"inline-block",opacity:0});
 			var anim = dojo.fx.combine([
 					dojo.fadeOut({node:outNode, duration:duration || 200}),
@@ -294,21 +329,26 @@ dojo.require("dojo.dnd.Source");
 		}
 
 		this.cancelRemoveButtonTimer = function(){
+			//	summary:
+			//		Turn off the Remove button timer, which resets the
+			//		"Remove | Keep" button back to "(-)" (delete) after
+			//		a few seconds of inactivity.
 			clearTimeout(this.confirmationTimer);
 			this.confirmationTimer = null;
 		}
 
 		this.onFormatChange = function(evt){
-			console.log("onFormatChange:", evt.target.value);
+			//	summary:
+			//		Handle resetting the item's format.
 			if(evt.target.value!=this.item.preferredFormatStr){
 				this.resetFormat = this.item.preferredFormatStr;
 				this.item.preferredFormatStr=evt.target.value;
 				this.parent.changeFormat(this);
-			}	
+			}
 		};
-		
+
 		this.onRemClick = function(){
-			console.log("REMOVE clicked:", this.item.title);
+			//	summary: Show the "Remove | Keep" button for a few seconds.
 			toggleRemoveButtonState(this.removeButtonNode, this.confirmButtonNode);
 			// FIXME: this if() shouldn't be necessary, but since this method gets called
 			//        twice per click, this ensures that the toggle only happens once
@@ -323,22 +363,24 @@ dojo.require("dojo.dnd.Source");
 		};
 
 		this.onKeepClick = function(){
-			//console.log("KEEP clicked:", this.item.title);
+			//	summary: Cancel the item deletion process; keep the item.
 			this.cancelRemoveButtonTimer();
 			toggleRemoveButtonState(this.confirmButtonNode, this.removeButtonNode);
 		};
 
 		this.onConfirmRemoveClick = function(){
-			//console.log("CONFIRM REMOVE clicked:", this.item.title);
+			//	summary: Remove an item from the queue.
 			this.cancelRemoveButtonTimer();
 			this.parent.remove(this);
 		};
-		
+
 		this.onProblemClick = function(){
+			//	summmary: Show the netflix.com page for reporting problems with discs.
 			air.navigateToURL(new air.URLRequest("https://www.netflix.com/DiscProblems"));
 		};
 		this.onPlayClick = function(){
-			console.log("PLAY clicked:", this.item.guid);
+			//	summary: Development helper to try and play Instant Watch titles in AIR.
+
 			//	test: try to open up a new AIR window using the url stuff from Netflix's api
 			var href = "http://www.netflix.com/CommunityAPIPlay?devKey="
 					+ qd.app.authorization.consumer.key
@@ -350,34 +392,35 @@ dojo.require("dojo.dnd.Source");
 		};
 
 		this.onTitleClick = function(){
-			//console.log("clicked:", this.item.title, this.item.id);
+			//	summary: Show the movie info detail dialog for this item.
 			qd.app.movies.showInfo(this.item.guid);
 		};
 
-		this.onTitleOver = function(){
-			console.log("over:: " + this.item.title.title, this.item);
-		};
+		this.onTitleOver = function(){};
 
-		this.onTitleOut = function(){
-			//console.log("out");
-		};
+		this.onTitleOut = function(){};
 
 		this.onTopClick = function(){
+			//	summary: Move this queue item to the top of the queue (position 1)
 			if(this.position>1){
-				this.parent.reorder(this, 1);	
+				this.parent.reorder(this, 1);
 			}
 		};
 
 		this.onTextKeyUp = function(evt){
+			//	summary:
+			//		Monitor key events in the item's position textbox, and on
+			//		Enter, reorder the queue accordingly.
 			var k = evt.keyCode;
-			//console.log("UP:", k, evt.keyIdentifier, evt);
 			if(k == 13){
 				this.parent.reorder(this, this.textbox.value);
 			}
 		};
 
 		this.onTextBlur = function(evt){
-			//console.log("blur", this.textbox.value, "=", this.position);
+			//	summary:
+			//		Reorder the queue if the user changed the value of the
+			//		item's position textbox.
 			if(this.textbox.value != this.position){
 				this.textbox.value = this.position;
 			}
@@ -397,11 +440,16 @@ dojo.require("dojo.dnd.Source");
 		this.dndSource = null;
 
 		this.constructor = function(/* Object */options, /* Node */parentNode){
+			//	summary:
+			//		Initialize a queue by setting up drag and drop, etc.
+			//	options:
+			//		Property bag to use as a mixin on this queue.
+			//	parentNode:
+			//		Node in which to insert this queue item into the DOM.
 			dojo.mixin(this, options);
 			if(this.type=="watched"){
-				this.result.items = dojo.filter(this.result.items, function(m, i){ if(i<this.recentWatchedAmount){ return m; }}, this); 
+				this.result.items = dojo.filter(this.result.items, function(m, i){ if(i<this.recentWatchedAmount){ return m; }}, this);
 			}
-		//	console.log(" -- - - qd.app.queueList", this.type, this.result)
 			this.domNode = dojo.byId(parentNode);
 			this.dndSource = new dojo.dnd.Source(this.domNode, {
 				accept: options.type || "movie",
@@ -424,32 +472,46 @@ dojo.require("dojo.dnd.Source");
 				// in English: for "queue" and "instant", skip when position==null
 				return i.position || (this.type!="queue" && this.type!="instant");
 			}, this));
-		
+
 			this.noItemCheck();
 			this.onLoad();
-	//		console.info(this.type, "LIST ITEMS:", this.list)
 		};
-		
+
 		this.onLoad = function(){
-			setTimeout(dojo.hitch(qd.app.queue, "onLoad", this), 100);	
+			//	summary: Hook for code to run when the queue's data is loaded.
+			setTimeout(dojo.hitch(qd.app.queue, "onLoad", this), 100);
 		};
 		this.onChange = function(/*String*/typeOfChange){
-			qd.app.queue.onChange(this, typeOfChange);	
+			//	summary: Hook for code to run when the queue's data changes.
+			qd.app.queue.onChange(this, typeOfChange);
 		};
-		
-		this.inQueue = function(movieId){
-			return dojo.some(this.list, function(listItem){
-				return listItem.item.title.guid == movieId;
-			}, this);	//	Boolean
+
+		this.inQueue = function(/* String */movieId){
+			//	summary:
+			//		Check whether an item is in this queue.
+			//	movieId:
+			//		Netflix item guid to check.
+			var b = dojo.some(this.list, function(listItem){
+				var guid = listItem.item.title.guid;
+				return (guid == movieId);
+			}, this);
+			return b; //	Boolean
 		};
-		
-		this.inQueueByTerm = function(term){
+
+		this.inQueueByTerm = function(/* String */term){
+			//	summary:
+			//		Check whether an item is in this queue, by item title.
+			//	movieId:
+			//		Netflix item title to check.
 			return dojo.some(this.list, function(listItem){
 				return listItem.item.title.title == term;
 			}, this);
 		};
 
 		this.noItemCheck = function(){
+			//	summary:
+			//		Check to see if this queue is empty, and if so,
+			//		initialize the "no item" display.
 			if ((this.list.length == 0 && !this.noResultItem) || (this.list.length == 1 && !this.list[0])) {
 				this.noResultItem = new qd.app.nonItem({
 					type: this.type
@@ -459,8 +521,9 @@ dojo.require("dojo.dnd.Source");
 				this.noResultItem = null;
 			}
 		};
-		
+
 		this.destroy = function(){
+			//	summary: Tear down this queue object.
 			this.dndSource.destroy();
 			dojo.forEach(this.list, function(m){
 				m.destroy();
@@ -474,6 +537,7 @@ dojo.require("dojo.dnd.Source");
 			//	closure.
 			this.destroyed = true;
 		};
+
 		this.createItem = function(/* Object */item, /* String? */hint){
 			//	summary:
 			//		Turns the movie item provided into an object the
@@ -516,7 +580,7 @@ dojo.require("dojo.dnd.Source");
 				type: this.type
 			}
 		};
-		
+
 		this.onDrop = function(/* Node[] */nodes){
 			//	summary:
 			//		Handle drop events coming from the DnD system; typically
@@ -551,18 +615,22 @@ dojo.require("dojo.dnd.Source");
 			}, this);
 			this.draggingitem = null;
 		};
-		
+
 		this.onDragCancel = function(){
+			//	summary: Clean up after an aborted drag operation.
 			if(this.draggingitem){
 				dojo.style(this.draggingitem.domNode, "visibility", "visible");
 				dojo.style(this.draggingitem.ratingNode, "visibility", "visible");
 				this.draggingitem = null;
 			}
 		};
-		
-		this.highlight = function(movieId){
-			var listItem = this.byId(movieId);
-			console.log("HIGHLIGHT:", listItem);
+
+		this.highlight = function(/* String */movieId){
+			//	summary:
+			//		Run an animation to briefly highlight a dropped queue item.
+			//	movieId:
+			//		Netflix item guid to highlight.
+			var listItem = (movieId.indexOf("catalog")>-1) ? this.byTitle(movieId): this.byId(movieId);
 			if(listItem){
 				dijit.scrollIntoView(listItem.domNode);
 				var anim = dojo.animateProperty({
@@ -575,7 +643,7 @@ dojo.require("dojo.dnd.Source");
 				}).play();
 			}
 		};
-		
+
 		this.addMovie = function(/* Object */item){
 			//	summary:
 			//		Adds movie to the list.
@@ -585,8 +653,6 @@ dojo.require("dojo.dnd.Source");
 			//		The API allows for item to be added
 			//		a certain position. Currently not
 			//		supported by our UI.
-			console.log("ADD MOVIE TO QUEUE:", item)
-
 			var options = {
 				guid: item.guid,
 				title: item.title,
@@ -599,21 +665,20 @@ dojo.require("dojo.dnd.Source");
 			def.addCallback(this, function(data){
 				qd.app.loadingIcon.hide();
 				if(this.destroyed){ delete this; return; }
-				console.log(">>>>>>>>>>>>>>>add movie result:", data);
 				var item = data.created[0];
 				qd.services.item(item);
-				
+
 				this.noItemCheck();
 				var listItem = this.dndSource.insertNodes(false, [item]);
 				dojo.forEach(this.list, function(m, i){
 					m.position = i + 1;
 				});
 				//this.highlight(listItem.id);
-				
+
 				qd.app.queue.getRatings([item], dojo.hitch(this, function(ratings){
 					this.setRatingData(ratings);
 				}));
-				
+
 				this.onChange("add");
 			});
 			def.addErrback(this, function(err){
@@ -637,14 +702,11 @@ dojo.require("dojo.dnd.Source");
 		};
 
 		this.remove = function(/* Object */listItem){
-			// summary:
+			//	summary:
 			//		Triggered by the delete icon in an item
-
-			// FIXME: Seems like this code could be tighter.
 			var url=(this.type == "queue")?"queues/disc/available":(this.type=="instant")?"queues/instant/available":"queues/disc/saved";
-			
+
 			var movieId = listItem.id;
-			console.log("remove: ", listItem.guid);
 			qd.app.loadingIcon.show();
 			qd.service.queues.remove({
 				url: url,
@@ -653,18 +715,17 @@ dojo.require("dojo.dnd.Source");
 			}).addCallback(this, function(res){
 				qd.app.loadingIcon.hide();
 				if(this.destroyed){
-			   		delete this; 
-					return; 
+			   		delete this;
+					return;
 				}
-				console.log("queueList.remove result:", res);
 				this.removeDisplayItem(listItem);
 				qd.app.movies.queueMovieChange(movieId, this.type);
 				// needs to be done after anim -> this.noItemCheck();
 			}).addErrback(this, function(err){
 				qd.app.loadingIcon.hide();
 				if(this.destroyed){
-			   		delete this; 
-					return; 
+			   		delete this;
+					return;
 				}
 				console.warn("Error on remove status:", err.status.results.message);
 				//listItem.reset();
@@ -672,7 +733,7 @@ dojo.require("dojo.dnd.Source");
 		};
 
 		this.removeDisplayItem = function(/* Object*/listItem){
-			// summary:
+			//	summary:
 			//		The visual, animated part of removing an item
 			dojo.style(listItem.domNode, "backgroundColor", "#ff0000");
 			dojo.fadeOut({node:listItem.domNode, onEnd:dojo.hitch(this, function(){
@@ -687,9 +748,9 @@ dojo.require("dojo.dnd.Source");
 		};
 
 		this._removeListItem = function(/* Object */listItem){
-			// summary:
+			//	summary:
 			//		After server call and animaton, finally
-			// 		remove domNode and reorder list.
+			//		remove domNode and reorder list.
 			var i = this.getIndex(listItem.id);
 			this.dndSource.delItem(listItem.domNode.id);
 			listItem.destroy();
@@ -700,10 +761,10 @@ dojo.require("dojo.dnd.Source");
 			this.noItemCheck();
 			this.onChange("remove");
 		};
-		
+
 		this.renumber = function(/* Object*/listItem){
-			// note that position is one-based,
-			//	while index is zero-based
+			//	summary: Renumber (internally; don't update the display) the queue's items.
+			//	note: Be careful; position is one-based, while index is zero-based.
 			var i = this.getIndex(listItem.id);
 			this.list.splice(i, 1);
 			this.list.splice(listItem.position - 1, 0, listItem);
@@ -711,24 +772,30 @@ dojo.require("dojo.dnd.Source");
 				m.position = i + 1;
 			});
 		};
-		
+
 		this.reorder = function(/* Object */listItem, /* Number */pos, /* Boolean? */animate){
-			// re ordering by a numeric input or drag, not 'top'
+			//	summary:
+			//		Reorder the queue after a position textbox change or a drag
+			//		and drop operation (but not clicking the "top" button).
+			//	listItem:
+			//		Queue list item just changed.
+			//	pos:
+			//		Item's new position.
+			//	animate:
+			//		Optional flag (default true) to indicate to animate the change.
 			if(typeof animate == "undefined"){ animate = true; }
-			
+
 			var options = {
 				guid:listItem.item.guid,
 				position:pos,
 				title: listItem.item.title.title,
 				url:(this.type == "queue")?"queues/disc":"queues/instant"
 			};
-			
+
 			qd.app.loadingIcon.show();
-			var def = qd.service.queues.modify(options);
-			def.addCallback(this, function(res){
+			qd.service.queues.modify(options).addCallback(this, function(res){
 				qd.app.loadingIcon.hide();
 				if(this.destroyed){ delete this; return; }
-				console.log(">>>>>>>>>>>>reorder result:", res);
 				if(res.code=="201" || res.code=="200"){
 					listItem.update(res.created[0]);
 					qd.services.item(res.created[0]);
@@ -739,21 +806,21 @@ dojo.require("dojo.dnd.Source");
 				}else{
 					console.warn("reorder, bad status:", res)
 				}
-			});
-			def.addErrback(this, function(err){
+			}).addErrback(this, function(err){
 				qd.app.loadingIcon.hide();
 				console.warn("Error on reorder status:", err.status.results.message);
 				listItem.reset();
 			});
-
 		};
 
 		this.reorderDisplay = function(/* Object*/listItem){
-			this.renumber(listItem);	
+			//	summary:
+			//		Run an animation to show the queue order changing.
+			this.renumber(listItem);
 			// 	animate old row to red
 			//	move old row to new position
 			// 	animate new row from yellow to white to transparent
-			
+
 			var self = this;
 			dojo.animateProperty({
 				node: listItem.domNode,
@@ -766,10 +833,13 @@ dojo.require("dojo.dnd.Source");
 					self.highlight(listItem.id);
 				}
 			}).play();
-		
 		};
 
 		this.attachEvents = function(){
+			//	summary:
+			//		Register event connections defined in the queue's template.
+			//	node:
+			//		The queue's DOM node.
 			dojo.query(".listQueuedRow", this.domNode).forEach(function(node, i){
 				this.list[i].attachEvents(node);
 				this.list[i].postDom();
@@ -807,6 +877,8 @@ dojo.require("dojo.dnd.Source");
 		};
 
 		this.getIndex = function(/* String */id){
+			//	summary:
+			//		Return the internal array index of the list item having the given ID.
 			var index = -1;
 			dojo.some(this.list, function(m, i){
 				if(m.id==id){ index=i; return true;}

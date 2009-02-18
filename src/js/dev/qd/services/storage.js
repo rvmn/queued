@@ -1,16 +1,12 @@
 dojo.provide("qd.services.storage");
 
-/*	qd.services.storage
- *
- *	A wrapper utility around AIR's EncryptedLocalStorage,
- *	designed specifically for Queued's needs.
- */
-
 (function(){
 	var els = air.EncryptedLocalStore,
 		ba = air.ByteArray;
 
-	qd.services.storage = new (function(useCompression){
+	qd.services.storage = new (function(/* Boolean? */useCompression){
+		//	summary:
+		//		A singleton object that acts as the broker to the Encrypted Local Storage of AIR.
 		var compress = useCompression || false;
 
 		//	basic common functionality
@@ -31,13 +27,13 @@ dojo.provide("qd.services.storage");
 				}
 
 				els.setItem(key, stream);
-				return value;
+				return value;	//	Object
 			}
 
 			//	getter branch
 			var stream = els.getItem(key);
 			if(!stream){
-				return null;
+				return null;	//	Object
 			}
 
 			if(compress){
@@ -46,16 +42,18 @@ dojo.provide("qd.services.storage");
 				} catch(ex){
 					//	odds are we have an uncompressed thing here, so simply kill it and return null.
 					els.removeItem(key);
-					return null;
+					return null;	//	Object
 				}
 			}
 
 			//	just in case, we make sure there's no "undefined" in the pulled JSON.
 			var s = stream.readUTFBytes(stream.length).replace("undefined", "null");
-			return dojo.fromJson(s);
+			return dojo.fromJson(s);	//	Object
 		};
 
-		this.remove = function(key){
+		this.remove = function(/* String */key){
+			//	summary:
+			//		Remove the item at key from the Encrypted Local Storage.
 			if(key === null || key === undefined || !key.length){
 				throw new Error("qd.services.storage.remove: you cannot pass an undefined or empty string as a key.");
 			}
@@ -63,6 +61,8 @@ dojo.provide("qd.services.storage");
 		};
 
 		this.clear = function(){
+			//	summary:
+			//		Clear out anything in the Encryped Local Storage.
 			els.reset();
 			this.onClear();
 		};

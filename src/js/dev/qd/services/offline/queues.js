@@ -6,20 +6,28 @@ dojo.provide("qd.services.offline.queues");
 		util = qd.services.util;
 
 	dojo.mixin(qd.services.offline.queues, {
+		//	summary:
+		//		The offline-based service for queue information.  All of this runs off the internal cache.
 		etag: function(/* String */queue, /* String? */tag){
-			return qd.services.online.queues.etag(queue, tag);
+			//	summary:
+			//		Get the last etag for the specified queue.
+			return qd.services.online.queues.etag(queue, tag);	//	String
 		},
 		clear: function(){
+			//	summary:
+			//		Clear out the queue cache.
 			qd.services.online.queues.clear();
 		},
 		fetch: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the queue information based on the passed partial URL.
 			var dfd = util.prepare(kwArgs);
 			var sql = "SELECT * FROM QueueCache WHERE queue=:queue",
 				queue = "disc";
 
 			if(kwArgs.url == "queues/disc/saved"){ queue = "saved"; }
+			else if(kwArgs.url.indexOf("queues/instant")>-1){ queue = "instant"; }
 			else if(kwArgs.url == "at_home"){ queue = "at_home"; }
-			else if(kwArgs.url == "queues/instant"){ queue = "instant"; }
 			else if(kwArgs.url == "rental_history/watched"){ queue = "watched"; }
 			else if(kwArgs.url.indexOf("rental_history")>-1){ queue = "history"; }
 			
@@ -46,72 +54,89 @@ dojo.provide("qd.services.offline.queues");
 					dfd.errback(data);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		atHome: function(kwArgs){
+		atHome: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's At Home queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "at_home";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 				console.log("offline at home: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		discs: function(kwArgs){
+		discs: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's disc queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "queues/disc";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 			//	console.log("discs: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		saved: function(kwArgs){
+		saved: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's saved discs.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "queues/disc/saved";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 			//	console.log("saved discs: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		instant: function(kwArgs){
+		instant: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's instant queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "queues/instant";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 			//	console.log("instant: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		watched: function(kwArgs){
+		watched: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's instant watched queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/watched";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 			//	console.log("watched: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		shipped: function(kwArgs){
+		shipped: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's shipped disc history.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/shipped";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 				console.log("shipped: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		returned: function(kwArgs){
+		returned: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's returned disc history.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/returned";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 				console.log("returned: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		modify: function(/* qd.services.online.queues.add.__AddArgs */kwArgs){
+		modify: function(/* qd.services.online.queues.add.__ModifyArgs */kwArgs){
+			//	summary:
+			//		Store the passed action in the transaction queue for sync when returning
+			//		online.
 			var dfd = util.prepare(kwArgs),
 				item = qd.services.item(kwArgs.guid),
 				title = kwArgs.title || "";
@@ -121,7 +146,7 @@ dojo.provide("qd.services.offline.queues");
 				setTimeout(function(){
 					dfd.callback({});
 				}, 10);
-				return dfd;
+				return dfd;	//	dojo.Deferred
 			}
 
 			var sql = "INSERT INTO TransactionQueue (method, args, prompt, dateAdded) "
@@ -159,9 +184,12 @@ dojo.provide("qd.services.offline.queues");
 				}
 			});
 
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		remove: function(/* qd.services.online.queues.remove.__RemoveArgs */kwArgs){
+			//	summary:
+			//		Store the remove queue item command in the transaction queue for later
+			//		sync when the user returns online.
 			var dfd = util.prepare(kwArgs);
 			var sql = "INSERT INTO TransactionQueue (method, args, prompt, dateAdded) "
 				+ " VALUES (:method, :args, :prompt, DATETIME())";
@@ -180,7 +208,7 @@ dojo.provide("qd.services.offline.queues");
 					dfd.callback({ code: 200 });
 				}
 			});		
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		cache: function(){ return; },
 		addMovieById: function(/* String */movieId, target, /* String */queue){

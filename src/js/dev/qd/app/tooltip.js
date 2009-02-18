@@ -174,6 +174,8 @@ qd.app.tooltip = new (function(){
 	}
 
 	function tooltipIsDisabled(){
+		//	summary:
+		//		Returns true if the tooltip is disabled, else false.
 		return qd.app.isDragging();
 	}
 

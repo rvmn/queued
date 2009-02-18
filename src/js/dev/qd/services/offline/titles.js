@@ -6,10 +6,16 @@ dojo.provide("qd.services.offline.titles");
 		util = qd.services.util;
 	
 	dojo.mixin(qd.services.offline.titles, {
+		//	summary:
+		//		The offline-based service to pull title information (movies, TV shows, etc.) out of the cache.
 		save: function(/* Object */item){
+			//	summary:
+			//		Save the passed item.  Redundant but necessary to not break app code.
 			qd.services.online.titles.save(item);
 		},
 		clear: function(){
+			//	summary:
+			//		Clear all of the titles out of the cache.
 			qd.services.online.titles.clear();
 		},
 		find: function(/* qd.services.online.titles.find.__FindArgs */kwArgs){
@@ -58,9 +64,11 @@ dojo.provide("qd.services.offline.titles");
 					dfd.errback(result);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		fetch: function(/* qd.services.online.titles.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch full title information out the cache and return it.
 			var dfd = util.prepare(kwArgs);
 			//	Check the cache first.
 
@@ -90,9 +98,11 @@ dojo.provide("qd.services.offline.titles");
 					}, 10);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		autosuggest: function(/* on.titles.autosuggest.__AutosuggestArgs */kwArgs){
+			//	summary:
+			//		Return up to 10 terms out of the cache that sort of match the passed string.
 			var dfd = util.prepare(kwArgs);
 			var sql = "SELECT 1 AS main, title FROM Title WHERE SUBSTR(title, 0, :length) = :term "
 				+ "UNION SELECT 2 AS main, title FROM Title WHERE title LIKE :like "
@@ -114,10 +124,11 @@ dojo.provide("qd.services.offline.titles");
 					}, 10);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		rated: function(/* qd.services.online.titles.rated.__RatedArgs */kwArgs){
-			//	should have an array of guids.
+			//	summary:
+			//		Return any cached ratings info based on the passed set of title guids.
 			var dfd = new dojo.Deferred();
 
 			db.execute({
@@ -141,7 +152,7 @@ dojo.provide("qd.services.offline.titles");
 					dfd.callback(a);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		rate: function(/* qd.services.online.titles.rate.__RateArgs */kwArgs){
 			//	summary:
@@ -175,9 +186,11 @@ dojo.provide("qd.services.offline.titles");
 				}
 			});
 
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		recommendations: function(kwArgs){
+		recommendations: function(/* qd.services.titles.online.recommendations.__RecArgs */kwArgs){
+			//	summary:
+			//		Get any recommendations out of the cache and return them.
 			var dfd = util.prepare(kwArgs),
 				sql = "SELECT DISTINCT r.guid AS guid, r.title AS title, t.json AS json "
 					+ "FROM Recommendation r "
@@ -209,7 +222,7 @@ dojo.provide("qd.services.offline.titles");
 					dfd.errback(data);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}		
 	});
 })();

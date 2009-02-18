@@ -44,6 +44,9 @@ qd.app.topMovies = new (function(){
 	};
 	
 	this.togglePageElements = function(){
+		//	summary:
+		//		Show/hide certain elements of the content area according
+		//		to the current page.
 		var p = this.currentPage;
 		dojo.style("genrePicker", "display", p=="top25ByGenre"?"inline":"none");
 		dojo.style("top100Title", "display", p=="top100"?"block":"none");
@@ -54,6 +57,8 @@ qd.app.topMovies = new (function(){
 	}
 
 	this.checkForRefresh = function(){
+		//	summary:
+		//		Make sure we are allowed to see the area requested.
 		this.togglePageElements();
 		if(this.loggedIn === undefined){
 			return;

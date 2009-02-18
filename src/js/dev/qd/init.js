@@ -79,9 +79,11 @@ qd.init = qd.init || {};
 (function(){
 	//	setup the services getter
 	qd.__defineGetter__("service", function(){
+		//	summary:
+		//		Return the proper service (qd.services.online, qd.services.offline)
+		//		based on the current network status.
 		var b = qd.services.network.available;
-	//	console.warn("-----> Using the " + (b ? "online" : "offline") + " service.");
-		return b ? qd.services.online : qd.services.offline;
+		return b ? qd.services.online : qd.services.offline;	//	Object
 	});
 	dojo.addOnLoad(qd.services.init);
 

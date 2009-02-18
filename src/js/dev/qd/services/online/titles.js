@@ -154,11 +154,17 @@ dojo.provide("qd.services.online.titles");
 	}
 
 	dojo.mixin(qd.services.online.titles, {
-		//	TODO: see if this really needs to be exposed.
+		//	summary:
+		//		The online-based service to get any title information, including
+		//		ratings and recommendations.
 		save: function(/* Object */item){
+			//	summary:
+			//		Save the passed title to the database.
 			saveTitle(item);
 		},
 		clear: function(){
+			//	summary:
+			//		Clear all titles out of the database.
 			db.execute({
 				sql: "DELETE FROM Title",
 				result: function(data){
@@ -329,8 +335,9 @@ dojo.provide("qd.services.online.titles");
 			});
 			return dfd;	//	dojo.Deferred
 		},
+
 		/*=====
-		on.titles.autosuggest.__AutosuggestArgs = function(term, result, error){
+		qd.services.online.titles.autosuggest.__AutosuggestArgs = function(term, result, error){
 			//	summary:
 			//		Arguments object for fetching movie details
 			//	term: String?
@@ -342,7 +349,7 @@ dojo.provide("qd.services.online.titles");
 			//		The callback function to be executed if there is an error in fetching.
 		}
 		=====*/
-		autosuggest: function(/* on.titles.autosuggest.__AutosuggestArgs */kwArgs){
+		autosuggest: function(/* qd.services.online.titles.autosuggest.__AutosuggestArgs */kwArgs){
 			//	summary:
 			//		Get the autocomplete terms from Netflix, given the right term.
 			var dfd = util.prepare(kwArgs),
@@ -364,7 +371,7 @@ dojo.provide("qd.services.online.titles");
 				}
 			}, signer));
 
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 
 		/*=====
@@ -391,8 +398,6 @@ dojo.provide("qd.services.online.titles");
 			var dfd = new dojo.Deferred();
 			var ratings = [];
 
-			//	TODO: grab any titles from memory, check to see if they have ratings, and
-			//	pull them out of the guid list.
 			db.fetch({
 				sql: "SELECT json FROM Title WHERE guid IN ('" + (kwArgs.guids || []).join("','") + "') ORDER BY title",
 				result: function(data){
@@ -463,7 +468,7 @@ dojo.provide("qd.services.online.titles");
 					}
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		/*=====
 		qd.services.online.titles.rate.__RateArgs = function(guid, rating, result, error){
@@ -490,7 +495,7 @@ dojo.provide("qd.services.online.titles");
 				setTimeout(function(){
 					dfd.errback(new Error("qd.service.rate: cannot rate an item with a guid of " + kwArgs.guid));
 				}, 10);
-				return dfd;
+				return dfd;	//	dojo.Deferred
 			}
 			
 			//	check to see if this is an update
@@ -554,7 +559,7 @@ dojo.provide("qd.services.online.titles");
 				args = dojox.io.OAuth.sign("POST", args, signer);
 				dojo.xhrPost(args);
 			}
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		/*=====
 		qd.services.titles.online.recommendations.__RecArgs = function(start, max, result, error){
@@ -624,7 +629,7 @@ dojo.provide("qd.services.online.titles");
 					dfd.errback(err, ioArgs);
 				}
 			}, signer));
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();

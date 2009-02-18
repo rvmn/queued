@@ -238,9 +238,15 @@ qd.app.movies = new (function(){
 	});
 
 	function disableInfoDialog(){
+		//	summary:
+		//		Disable showing the info dialog if the app attempts to do
+		//		so (e.g., during a drag event).
 		dialogIsDisabled = true;
 	}
 	function enableInfoDialog(){
+		//	summary:
+		//		Enable showing the info dialog if the app attempts to do so.
+
 		// Janky timer! Give it a brief moment to try and pass
 		// any click events through to nodes that might trigger
 		// the dialog, THEN reenable it.
@@ -249,15 +255,35 @@ qd.app.movies = new (function(){
 		}, 150);
 	}
 
+	// connect to this to listen for items being added to the queue from the info dialog
+	this.onTitleAddedFromDialog = function(){};
+
 	var movieInfoHandler = {
 		onclick: dojo.hitch(this, function(evt){
-			var movieId = this.getMovieIdByNode(evt.target);
+			var movieId = null,
+			    movieNode = evt.target;
+			while(!movieId){
+				movieNode = movieNode.parentNode;
+				movieId = dojo.attr(movieNode, "movie");
+			}
 			if(movieId){
+				// change the Add/In Q button state if the item gets added
+				// while the dialog is open
+				var __h = dojo.connect(this, "onTitleAddedFromDialog", function(){
+					dojo.disconnect(__h);
+					dojo.query(".addButton", movieNode).forEach(function(n){
+						var queue = dojo.hasClass(n, "instant") ? "instantList" : "queueList",
+						    isQueued = qd.app.queue.inQueue(dojo.attr(movieNode, "movie"), queue);
+						dojo.addClass(n, "inQueue");
+					});
+				});
+
+				// show the dialog
 				this.showInfo(movieId);
 			}
 		})
 	};
-	
+
 	var movieAddHandler = {
 		onclick: function(evt){
 			var movieId = qd.app.movies.getMovieIdByNode(evt.target);
@@ -272,7 +298,7 @@ qd.app.movies = new (function(){
 	};
 	
 	var movieDialogAddHandler = {
-		onclick: function(evt){
+		onclick: dojo.hitch(this, function(evt){
 			var movieId = qd.app.movies.getMovieIdByNode(evt.target);
 			if(movieId){
 				dijit.byId("movieInfoDialogNode").hide();
@@ -282,9 +308,11 @@ qd.app.movies = new (function(){
 				} else {
 					qd.app.queue.addMovieByTerm(movieId, evt.target, queue);
 				}
+				this.onTitleAddedFromDialog();
 			}
-		}
+		})
 	};
+	
 	dojo.behavior.add({
 		// Public feed results interactions
 		"#artworkList .movie span.title": movieInfoHandler,

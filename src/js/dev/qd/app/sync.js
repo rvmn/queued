@@ -7,6 +7,8 @@ qd.app.sync = new (function(){
 	var progress=0, nActions=0, current=0;
 
 	function closeDialog(){
+		//	summary:
+		//		Hide the sync confirmation dialog.
 		dijit.byId("syncConfirmDialogNode").hide();
 	}
 
@@ -80,6 +82,8 @@ qd.app.sync = new (function(){
 	};
 
 	this.closeDialog = function(){
+		//	summary:
+		//		Function to expose the internal closeDialog() function as a public member of qd.app.sync.
 		closeDialog();
 	};
 
