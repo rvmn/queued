@@ -37,7 +37,14 @@ dojo.provide("qd.services.util");
 		reDecEntity=/&#([^;]+);/g;
 
 	dojo.mixin(qd.services.util, {
-		prepare: function(args, d){
+		//	summary:
+		//		A set of utility methods used throughout the Queued service layers.
+		prepare: function(/* Object */args, /* dojo.Deferred? */d){
+			//	summary:
+			//		Prepare any deferred (or create a new one) and set
+			//		up the callback/errback pair on it.  args.result
+			//		is the callback, args.error is the errback.  Used
+			//		primarily by the communication services (online/offline).
 			var dfd = d || new dojo.Deferred();
 			if(args.result){
 				dfd.addCallback(function(data, ioArgs){
@@ -49,19 +56,24 @@ dojo.provide("qd.services.util");
 					args.error.call(args, evt, ioArgs);
 				});
 			}
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		mixin: function(dest, override){
-			// Custom mixin function to stamp the properties from override
-			// onto dest without clobbering member objects as you would in
-			// a shallow copy like dojo.mixin does; this isn't particularly
-			// robust or fast, but it works for our movie objects.
+
+		mixin: function(/* Object */dest, /* Object */override){
+			//	summary:
+			//		Custom mixin function that is considered "additive", as
+			//		opposed to simply overriding.
+			//	description:
+			// 		Custom mixin function to stamp the properties from override
+			// 		onto dest without clobbering member objects as you would in
+			// 		a shallow copy like dojo.mixin does; this isn't particularly
+			// 		robust or fast, but it works for our title and queue item objects.
 			//
-			// The basic property handling rules are:
-			// 	- null doesn't overwrite anything, ever
-			// 	- scalars get overwritten by anything, including new scalars
-			// 	- arrays get overwritten by longer arrays or by objects
-			// 	- objects get merged by recursively calling mixin()
+			// 		The basic property handling rules are:
+			// 			- null doesn't overwrite anything, ever
+			// 			- scalars get overwritten by anything, including new scalars
+			// 			- arrays get overwritten by longer arrays or by objects
+			// 			- objects get merged by recursively calling mixin()
 			for(k in override){
 				if(override[k] === null || override[k] === undefined){ continue; }
 				if(dojo.isArray(override[k])){
@@ -84,14 +96,22 @@ dojo.provide("qd.services.util");
 				}
 				else{
 					if(dest[k] === null || (!dojo.isArray(dest[k]) && !dojo.isObject(dest[k]))){
-						dest[k] = override[k];
+						if(!dest[k]){
+							dest[k] = override[k];
+						} else if (dest[k] && override[k] && dest[k] != override[k]){
+							dest[k] = override[k];
+						}
 					}
 				}
 			}
-			return dest;
+			return dest;	//	Object
 		},
-		clean: function(str){
-			return str.replace(reHexEntity, function(){
+		clean: function(/* String */str){
+			//	summary:
+			//		Pull out any HTML tags and replace any HTML entities with the
+			//		proper characters.  Used primarily for the description/synopsis
+			//		of a title coming from one of the Netflix public RSS feeds.
+			return str.replace(reHexEntity, function(){		//	String
 					return String.fromCharCode(parseInt(arguments[1],16));
 				})
 				.replace(reDecEntity, function(){
@@ -103,6 +123,8 @@ dojo.provide("qd.services.util");
 				.replace(/<[^>]*>/g, "");
 		},
 		image: {
+			//	summary:
+			//		Helper functions for caching images for offline.
 			url: function(url){
 				//	summary:
 				//		Return the best url for the image.
@@ -112,9 +134,9 @@ dojo.provide("qd.services.util");
 				if(file.exists){
 					return file.url;
 				}
-				return url;
+				return url;	//	String
 			},
-			store: function(/* String */url){
+			store: function(url){
 				//	summary:
 				//		Return the best url for the image.
 				//	url: String
@@ -156,7 +178,7 @@ dojo.provide("qd.services.util");
 
 				//	load the URL.
 				l.load(u);
-				return dfd;
+				return dfd;	//	dojo.Deferred
 			}
 		}
 	});
@@ -168,17 +190,13 @@ if(!dojo._hasResource["qd.services.storage"]){ //_hasResource checks added by bu
 dojo._hasResource["qd.services.storage"] = true;
 dojo.provide("qd.services.storage");
 
-/*	qd.services.storage
- *
- *	A wrapper utility around AIR's EncryptedLocalStorage,
- *	designed specifically for Queued's needs.
- */
-
 (function(){
 	var els = air.EncryptedLocalStore,
 		ba = air.ByteArray;
 
-	qd.services.storage = new (function(useCompression){
+	qd.services.storage = new (function(/* Boolean? */useCompression){
+		//	summary:
+		//		A singleton object that acts as the broker to the Encrypted Local Storage of AIR.
 		var compress = useCompression || false;
 
 		//	basic common functionality
@@ -199,13 +217,13 @@ dojo.provide("qd.services.storage");
 				}
 
 				els.setItem(key, stream);
-				return value;
+				return value;	//	Object
 			}
 
 			//	getter branch
 			var stream = els.getItem(key);
 			if(!stream){
-				return null;
+				return null;	//	Object
 			}
 
 			if(compress){
@@ -214,16 +232,18 @@ dojo.provide("qd.services.storage");
 				} catch(ex){
 					//	odds are we have an uncompressed thing here, so simply kill it and return null.
 					els.removeItem(key);
-					return null;
+					return null;	//	Object
 				}
 			}
 
 			//	just in case, we make sure there's no "undefined" in the pulled JSON.
 			var s = stream.readUTFBytes(stream.length).replace("undefined", "null");
-			return dojo.fromJson(s);
+			return dojo.fromJson(s);	//	Object
 		};
 
-		this.remove = function(key){
+		this.remove = function(/* String */key){
+			//	summary:
+			//		Remove the item at key from the Encrypted Local Storage.
 			if(key === null || key === undefined || !key.length){
 				throw new Error("qd.services.storage.remove: you cannot pass an undefined or empty string as a key.");
 			}
@@ -231,6 +251,8 @@ dojo.provide("qd.services.storage");
 		};
 
 		this.clear = function(){
+			//	summary:
+			//		Clear out anything in the Encryped Local Storage.
 			els.reset();
 			this.onClear();
 		};
@@ -249,6 +271,11 @@ dojo._hasResource["qd.services.data"] = true;
 dojo.provide("qd.services.data");
 
 qd.services.data = new (function(){
+	//	summary:
+	//		A singleton object that handles any interaction with the
+	//		encrypted database.
+	//	database: String
+	//		The filename of the database.
 	this._testKey = "h1dd3n!!11one1";
 	this._testDb = "queued-test.db";	//	revert to queued.db
 	var _key = this._testKey;
@@ -264,21 +291,31 @@ qd.services.data = new (function(){
 
 	//	Properties
 	this.__defineGetter__("initialized", function(){
-		return initialized;
+		//	summary:
+		//		Returns whether the engine is initialized.
+		return initialized;	//	Boolean
 	});
 
 	//	these can't be getters, unfortunately.
 	this.connection = function(/* Boolean? */async){
-		return (async ? asyncConn : syncConn);
+		//	summary:
+		//		Return the proper connection.
+		return (async ? asyncConn : syncConn);	//	air.SQLConnection
 	};
 	this.connected = function(/* Boolean? */async){
-		return (async ? asyncConn.connected : syncConn.connected );
+		//	summary:
+		//		Returns whether the appropriate connection is actually connected.
+		return (async ? asyncConn.connected : syncConn.connected );	//	Boolean
 	};
 	this.transacting = function(/* Boolean? */async){
-		return (async ? asyncConn.inTransaction : syncConn.inTransaction );
+		//	summary:
+		//		Return whether the appropriate connection is in the middle of a transaction.
+		return (async ? asyncConn.inTransaction : syncConn.inTransaction );	//	Boolean
 	};
 	this.lastId = function(/* Boolean? */async){
-		return (async ? asyncConn.lastInsertRowID : syncConn.lastInsertRowID );
+		//	summary:
+		//		Return the lastId of the appropriate connection (INSERT/REPLACE).
+		return (async ? asyncConn.lastInsertRowID : syncConn.lastInsertRowID );	//	mixed
 	};
 
 	function eventSetup(/* air.SQLConnection */conn){
@@ -300,7 +337,9 @@ qd.services.data = new (function(){
 		return conn;
 	}
 	
-	this.init = function(key, db, forceCreate){
+	this.init = function(/* String */key, /* String */db, /* Boolean? */forceCreate){
+		//	summary:
+		//		Initialize the Queued data service.
 		//	set up the key
 		var k = key||this._testKey;
 		if(typeof(k) == "string"){
@@ -347,10 +386,20 @@ qd.services.data = new (function(){
 		});
 	};
 
-	this.create = function(/* Object */kwArgs){
+	/*=====
+	qd.services.data.__CreateArgs = function(file, connection){
+		//	summary:
+		//		Optional keyword arguments object for the create method.
+		//	file: String?
+		//		The filename to be used for creating the db.
+		//	connection: air.SQLConnection?
+		//		The connection to be used for creating the db.  Defaults
+		//		to the synchronous connection.
+	}
+	=====*/
+	this.create = function(/* qd.services.data.__CreateArgs */kwArgs){
 		//	summary:
 		//		Create the database.
-		console.warn("Creating the database...");
 		inCreation = true;
 		var file = kwArgs && kwArgs.file || initFile,
 			conn = kwArgs && kwArgs.connection || syncConn;
@@ -468,6 +517,7 @@ qd.services.data = new (function(){
 	function query(/* qd.services.data.fetch.__Args */kwArgs, /* air.SQLStatement */s){
 		//	summary:
 		//		Inner function to communicate with the database.
+		
 		//	set up the deferred.
 		var dfd = new dojo.Deferred();
 
@@ -517,7 +567,8 @@ qd.services.data = new (function(){
 	this.fetch = function(/* qd.services.data.fetch.__Args */kwArgs){
 		//	summary:
 		//		Fetch (i.e. read) data out of the database.  Can be used for write operations
-		//		but is not recommended; use execute for write ops.
+		//		but is not recommended; use execute for write ops.  This method is hard-coded
+		//		to use the synchronous connection (i.e. thread-blocking).
 		if(!kwArgs.sql){
 			console.log("qd.services.data.fetch: no SQL passed. " + dojo.toJson(kwArgs));
 			return null;
@@ -533,7 +584,8 @@ qd.services.data = new (function(){
 	this.execute = function(/* qd.services.data.fetch.__Args */kwArgs){
 		//	summary:
 		//		Execute the passed SQL against the database.  Should be used
-		//		for write operations (INSERT, REPLACE, DELETE, UPDATE).
+		//		for write operations (INSERT, REPLACE, DELETE, UPDATE).  This
+		//		method is hard-coded to use the asynchronous connection.
 		if(!kwArgs.sql){
 			console.log("qd.services.data.execute: no SQL passed. " + dojo.toJson(kwArgs));
 			return null;
@@ -546,51 +598,36 @@ qd.services.data = new (function(){
 		return d;	//	dojo.Deferred
 	};
 
-	this.sql = function(/* String */sql){
-		//	summary:
-		//		Dev functionality to allow for arbitrary sql to be executed.
-		//		FIXME: remove this before release!
-		this.execute({
-			sql: sql,
-			result: function(data){
-				console.log(data);
-			},
-			error: function(err){
-				console.warn(err);
-			}
-		});
-	};
-
 	//	event stubs
-	this.onError = function(evt){ };
-	this.onOpen = function(evt){ };
-	this.onClose = function(evt){ };
+	this.onError = function(/* air.Event */evt){ };
+	this.onOpen = function(/* air.Event */evt){ };
+	this.onClose = function(/* air.Event */evt){ };
 
 	//	analysis & maintenance
-	this.onAnalyze = function(evt){ };
-	this.onDeanalyze = function(evt){ };
-	this.onCompact = function(evt){ };
+	this.onAnalyze = function(/* air.Event */evt){ };
+	this.onDeanalyze = function(/* air.Event */evt){ };
+	this.onCompact = function(/* air.Event */evt){ };
 	this.onInitialize = function(){ };
 	this.onCreate = function(){ 
 		inCreation = false;
 	};
 
 	//	adding other database files
-	this.onAttach = function(evt){ };
-	this.onDetach = function(evt){ };
+	this.onAttach = function(/* air.Event */evt){ };
+	this.onDetach = function(/* air.Event */evt){ };
 
 	//	transactions
-	this.onBegin = function(evt){ };
-	this.onCommit = function(evt){ };
-	this.onRollback = function(evt){ };
+	this.onBegin = function(/* air.Event */evt){ };
+	this.onCommit = function(/* air.Event */evt){ };
+	this.onRollback = function(/* air.Event */evt){ };
 
 	//	SQL execution
-	this.onFetch = function(kwArgs){ };
-	this.onExecute = function(kwArgs){ };
-	this.onCancel = function(evt){ };
-	this.onInsert = function(evt){ };
-	this.onUpdate = function(evt){ };
-	this.onDelete = function(evt){ };
+	this.onFetch = function(/* qd.services.data.fetch.__Args */kwArgs){ };
+	this.onExecute = function(/* qd.services.data.fetch.__Args */kwArgs){ };
+	this.onCancel = function(/* air.Event */evt){ };
+	this.onInsert = function(/* air.Event */evt){ };
+	this.onUpdate = function(/* air.Event */evt){ };
+	this.onDelete = function(/* air.Event */evt){ };
 })();
 
 }
@@ -603,6 +640,8 @@ dojo.provide("qd.services.network");
 	var monitor, monitorUrl="http://www.netflix.com";
 
 	qd.services.network = new (function(){
+		//	summary:
+		//		A singleton object for access to the network layer of Queued.
 		var self = this,
 			pollInterval = 2500;
 		var statusChange = function(e){
@@ -708,10 +747,8 @@ dojo.provide("qd.services.parser");
 
 
 (function(){
-	//	generic XML parsing services for Queued.
-	//	Can take most of the XML available from Netflix
-	//	and return JSON objects from them.
-	
+ 	//	summary:
+	//		A set of objects used to parse any XML returned by the Netflix API.
 	var util = qd.services.util;
 	
 	//	TITLES
@@ -800,12 +837,8 @@ dojo.provide("qd.services.parser");
 		return ret;
 	}
 
-	function parseDate(/* String */tenDijitStr){
-		// summary:
-		//		XML helper.
-		//	description:
-		//		Converts netflix date string into a date object
-		return dojo.date.locale.format(new Date(Number(tenDijitStr+"000")), {selector:"date", datePattern:"MM/dd/yy"}); // Date
+	function parseDate(tenDijitStr){
+		return dojo.date.locale.format(new Date(Number(tenDijitStr+"000")), {selector:"date", datePattern:"MM/dd/yy"});
 	}
 
 	function parseScreenFormats(nl){
@@ -839,7 +872,6 @@ dojo.provide("qd.services.parser");
 	}
 
 	function parseAudio(nl){
-		//	this is ugly.
 		var ret = {};
 		for(var i=0, l=nl.length; i<l; i++){
 			var node = nl[i], tfnode;
@@ -870,6 +902,8 @@ dojo.provide("qd.services.parser");
 	// public functions
 	var p = qd.services.parser;
 	p.titles = {
+		//	summary:
+		//		The XML parser for any title information (movie, TV show, etc.)
 		fromRss: function(/* XmlNode */node, /* Object? */obj){
 			//	summary:
 			//		Parse basic movie information from the passed RSS element.
@@ -916,8 +950,6 @@ dojo.provide("qd.services.parser");
 				info = node.ownerDocument.evaluate("./*[name()!='link']", node),
 				currentNode;
 			
-			//	TODO: pull the queue info out of the resulting object!
-			//	fill out the info first.
 			while(currentNode = info.iterateNext()){
 				switch(currentNode.tagName){
 					case "id":
@@ -966,11 +998,6 @@ dojo.provide("qd.services.parser");
 						else if (scheme == "genres"){
 							o.categories.push(currentNode.getAttribute("term"));
 						}
-						/*
-						else if (scheme == "queue_availability"){
-							o.queue_availability = currentNode.getAttribute("term");
-						}
-						*/
 						break;
 					case "user_rating":
 						var val = currentNode.getAttribute("value");
@@ -1077,7 +1104,8 @@ dojo.provide("qd.services.parser");
 		},
 		
 		setType: function(/* Object */o){
-			//	post-process to find a "type"
+			//	summary:
+			//		Post-process a parsed title to set a type on it.
 			if(o.guid.indexOf("discs")>-1){
 				o.type = "disc";
 			}
@@ -1098,7 +1126,12 @@ dojo.provide("qd.services.parser");
 	};
 
 	p.queues = {
+		//	summary:
+		//		The XML parser for queue information (discs, instant, saved, rental history)
 		fromXml: function(/* XmlNode */node, /* Object? */obj){
+			//	summary:
+			//		Parse the returned XML into an object to be used by the application.
+			
 			//	object representing a queue item.  Note that the title info is
 			//	deliberately limited.
 			var item = {
@@ -1182,11 +1215,13 @@ dojo.provide("qd.services.parser");
 			if(obj){
 				item = util.mixin(obj, item);
 			}
-			return item;
+			return item;	//	Object
 		}
 	};
 
 	p.users = {
+		//	summary:
+		//		The XML parser for any user information
 		fromXml: function(/* XmlNode */node, /* Object? */obj){
 			//	summary:
 			//		Return a user object from the passed xml node.
@@ -1229,6 +1264,8 @@ dojo.provide("qd.services.parser");
 	};
 
 	p.people = {
+		//	summary:
+		//		The XML parser for any information on a person (actors, directors, etc.)
 		fromXml: function(/* XmlNode */node, /* Object? */obj){
 			//	summary:
 			//		Parse the information out of the passed XmlNode for people.
@@ -1264,6 +1301,8 @@ dojo.provide("qd.services.parser");
 	};
 
 	p.status = {
+		//	summary:
+		//		The XML parser for any status-based updates (modifying a queue, ratings, etc.)
 		fromXml: function(/* XmlNode */node){
 			//	summary:
 			//		Parse the status info out of the passed node.
@@ -1306,7 +1345,7 @@ dojo.provide("qd.services.parser");
 					}
 				}
 			}
-			return obj;
+			return obj;	//	Object
 		}
 	};
 })();
@@ -1365,18 +1404,36 @@ dojo.provide("qd.services.online.feeds");
 	}
 
 	dojo.mixin(qd.services.online.feeds, {
-		//	this object is used to get and cache any of the public RSS feeds
-		//	available from Netflix.
+		//	summary:
+		//		The online-based service for handling Netflix's public RSS feeds.
 		list: function(){
-			return rssFeeds.top25;
+			//	summary:
+			//		Return the list of Top 25 RSS feeds.
+			return rssFeeds.top25;	//	Object[]
 		},
 		top100: function(){
-			return rssFeeds.top100;
+			//	summary:
+			//		Return the top 100 feed object.
+			return rssFeeds.top100;	//	Object
 		},
 		newReleases: function(){
-			return rssFeeds.newReleases;
+			//	summary:
+			//		Return the New Releases feed object.
+			return rssFeeds.newReleases;	//	Object
 		},
-		fetch: function(/* Object */kwArgs){
+		/*=====
+		qd.services.online.feeds.fetch.__FetchArgs = function(url, result, error){
+			//	summary:
+			//		Keyword object for getting the contents of an RSS feed.
+			//	url: String
+			//		The URL of the feed to fetch.
+			//	result: Function?
+			//		The callback to be fired when the RSS feed has been fetched and parsed.
+			//	error: Function?
+			//		The errback function to be fired if there is an error during the course of the fetch.
+		}
+		=====*/
+		fetch: function(/* qd.services.online.feeds.fetch.__FetchArgs */kwArgs){
 			//	summary:
 			//		Fetch the feed at the url in the feed object, and
 			//		store/cache the feed when returned.
@@ -1410,7 +1467,7 @@ dojo.provide("qd.services.online.feeds");
 					dfd.errback(new Error("qd.service.feeds.fetch: an error occurred when trying to get " + kwArgs.url));
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();
@@ -1558,7 +1615,7 @@ dojo.provide("qd.services.online.titles");
 				});
 			},
 			error: function(err, ioArgs){
-				console.warn("Bath ratings fetch: ", err);
+				console.warn("Batch ratings fetch: ", err);
 			}
 		}, signer);
 		return dojo.xhrGet(signedArgs);
@@ -1575,11 +1632,17 @@ dojo.provide("qd.services.online.titles");
 	}
 
 	dojo.mixin(qd.services.online.titles, {
-		//	TODO: see if this really needs to be exposed.
+		//	summary:
+		//		The online-based service to get any title information, including
+		//		ratings and recommendations.
 		save: function(/* Object */item){
+			//	summary:
+			//		Save the passed title to the database.
 			saveTitle(item);
 		},
 		clear: function(){
+			//	summary:
+			//		Clear all titles out of the database.
 			db.execute({
 				sql: "DELETE FROM Title",
 				result: function(data){
@@ -1635,6 +1698,7 @@ dojo.provide("qd.services.online.titles");
 					var items = response.evaluate("/catalog_titles/catalog_title", response), node, sqls=[];
 					while(node = items.iterateNext()){
 						var item = ps.titles.fromXml(node);
+						item.art.large = util.image.url(item.art.large);
 						o.results.push(item);
 						qd.services.item(item);
 						sqls.push(item);
@@ -1646,6 +1710,11 @@ dojo.provide("qd.services.online.titles");
 					//	go and execute the saved SQL in the background
 					dojo.forEach(sqls, function(item){
 						saveTitle(item);
+						if(item.art.large && item.art.large.indexOf("http://")>-1){
+							util.image.store(item.art.large).addCallback(function(u){
+								item.art.large = u;
+							});
+						}
 					});
 				},
 				error: function(err, ioArgs){
@@ -1690,7 +1759,7 @@ dojo.provide("qd.services.online.titles");
 			} else {
 				test = qd.services.item(kwArgs.guid);
 			}
-			if(test && test.ratings.predicted !== null && test.synopsis){
+			if(test && test.ratings.user !== null && test.synopsis){
 				setTimeout(function(){
 					dfd.callback(test);
 				}, 10);
@@ -1727,7 +1796,7 @@ dojo.provide("qd.services.online.titles");
 				result: function(data, result){
 					if(data && data.length){
 						var title = dojo.fromJson(data[0].json);
-						if(title.ratings.predicted !== null && title.synopsis){
+						if(title.ratings.user !== null && title.synopsis){
 							qd.services.item(title);
 							setTimeout(function(){
 								dfd.callback(title, result);
@@ -1744,8 +1813,9 @@ dojo.provide("qd.services.online.titles");
 			});
 			return dfd;	//	dojo.Deferred
 		},
+
 		/*=====
-		on.titles.autosuggest.__AutosuggestArgs = function(term, result, error){
+		qd.services.online.titles.autosuggest.__AutosuggestArgs = function(term, result, error){
 			//	summary:
 			//		Arguments object for fetching movie details
 			//	term: String?
@@ -1757,7 +1827,7 @@ dojo.provide("qd.services.online.titles");
 			//		The callback function to be executed if there is an error in fetching.
 		}
 		=====*/
-		autosuggest: function(/* on.titles.autosuggest.__AutosuggestArgs */kwArgs){
+		autosuggest: function(/* qd.services.online.titles.autosuggest.__AutosuggestArgs */kwArgs){
 			//	summary:
 			//		Get the autocomplete terms from Netflix, given the right term.
 			var dfd = util.prepare(kwArgs),
@@ -1779,7 +1849,7 @@ dojo.provide("qd.services.online.titles");
 				}
 			}, signer));
 
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 
 		/*=====
@@ -1806,8 +1876,6 @@ dojo.provide("qd.services.online.titles");
 			var dfd = new dojo.Deferred();
 			var ratings = [];
 
-			//	TODO: grab any titles from memory, check to see if they have ratings, and
-			//	pull them out of the guid list.
 			db.fetch({
 				sql: "SELECT json FROM Title WHERE guid IN ('" + (kwArgs.guids || []).join("','") + "') ORDER BY title",
 				result: function(data){
@@ -1816,7 +1884,7 @@ dojo.provide("qd.services.online.titles");
 						//	run through the data results and see what we really need to go get from Netflix.
 						for(var i=0; i<data.length; i++){
 							item = dojo.fromJson(data[i].json);
-							if(item && item.ratings && item.ratings.predicted !== null){
+							if(item && item.ratings && item.ratings.user !== null){
 								good.push(item);
 							} else {
 								missing.push(item);
@@ -1878,7 +1946,7 @@ dojo.provide("qd.services.online.titles");
 					}
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		/*=====
 		qd.services.online.titles.rate.__RateArgs = function(guid, rating, result, error){
@@ -1905,7 +1973,7 @@ dojo.provide("qd.services.online.titles");
 				setTimeout(function(){
 					dfd.errback(new Error("qd.service.rate: cannot rate an item with a guid of " + kwArgs.guid));
 				}, 10);
-				return dfd;
+				return dfd;	//	dojo.Deferred
 			}
 			
 			//	check to see if this is an update
@@ -1924,6 +1992,8 @@ dojo.provide("qd.services.online.titles");
 						if(s.code == "200"){
 							if(kwArgs.rating == "not_interested" || kwArgs.rating == "no_opinion"){
 								item.ratings.user = null;
+							}else{
+								item.ratings.user = kwArgs.rating;
 							}
 							qd.services.item(item);
 							saveTitle(item);
@@ -1950,6 +2020,8 @@ dojo.provide("qd.services.online.titles");
 						if(s.code == "201"){
 							if(kwArgs.rating == "not_interested" || kwArgs.rating == "no_opinion"){
 								item.ratings.user = null;
+							}else{
+								item.ratings.user = kwArgs.rating;
 							}
 							qd.services.item(item);
 							saveTitle(item);
@@ -1965,7 +2037,7 @@ dojo.provide("qd.services.online.titles");
 				args = dojox.io.OAuth.sign("POST", args, signer);
 				dojo.xhrPost(args);
 			}
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		/*=====
 		qd.services.titles.online.recommendations.__RecArgs = function(start, max, result, error){
@@ -2035,7 +2107,7 @@ dojo.provide("qd.services.online.titles");
 					dfd.errback(err, ioArgs);
 				}
 			}, signer));
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();
@@ -2065,22 +2137,27 @@ dojo.provide("qd.services.online.queues");
 	}
 
 	dojo.mixin(qd.services.online.queues, {
+		//	summary:
+		//		The online-based service for queue information and manipulation.
 		paths: {
 			GET: {
-				"queues/disc"				:"//queue/queue_item",
+				"queues/disc/available"		:"//queue/queue_item",
 				"queues/disc/saved"			:"//queue/queue_item",
 				"at_home"					:"//at_home/at_home_item",
-				"queues/instant"			:"//queue/queue_item",
+				"queues/instant/available"	:"//queue/queue_item",
 				"rental_history/shipped"	:"//rental_history/rental_history_item",
 				"rental_history/returned"	:"//rental_history/rental_history_item",
-				"rental_history/watched"	:"//rental_history/rental_history_item",
-				"queues/disc/available"		:""
+				"rental_history/watched"	:"//rental_history/rental_history_item"
 			}
 		},
 		etag: function(/* String */queue, /* String? */tag){
-			return etag(queue, tag);
+			//	summary:
+			//		Store or retreive the latest etag for the passed queue.
+			return etag(queue, tag);	//	String
 		},
 		clear: function(){
+			//	summary:
+			//		Clear both the queue cache and the transaction queue from the database.
 			db.execute({
 				sql: "DELETE FROM QueueCache",
 				result: function(data){
@@ -2113,6 +2190,8 @@ dojo.provide("qd.services.online.queues");
 		 }
 		 =====*/
 		fetch: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the queue based on the passed partial URL string.
 			var dfd = util.prepare(kwArgs),
 				signer = qd.app.authorization;
 			
@@ -2123,7 +2202,7 @@ dojo.provide("qd.services.online.queues");
 
 			//	always get it from the server, but make sure you cache the queue on the user object
 			dojo.xhrGet(dojox.io.OAuth.sign("GET", {
-				url: "http://api.netflix.com/users/" + signer.userId + "/" + (kwArgs.url || "queues/disc")
+				url: "http://api.netflix.com/users/" + signer.userId + "/" + (kwArgs.url || "queues/disc/available")
 					+ "?sort=queue_sequence"
 					+ "&start_index=" + (kwArgs.start || 0)
 					+ "&max_results=" + (kwArgs.max || 500)
@@ -2131,7 +2210,7 @@ dojo.provide("qd.services.online.queues");
 					+ "&expand=" + encodeURIComponent("discs,episodes,seasons,synopsis,formats"),
 				handleAs: "xml",
 				load: function(xml, ioArgs){
-					var results = [], node, items = xml.evaluate(qd.services.online.queues.paths.GET[(kwArgs.url || "queues/disc")], xml);
+					var results = [], node, items = xml.evaluate(qd.services.online.queues.paths.GET[(kwArgs.url || "queues/disc/available")], xml);
 					var test = xml.getElementsByTagName("etag"), tagq;
 					if(test && test.length){
 						if(kwArgs.url && kwArgs.url.indexOf("queues/disc")>-1){
@@ -2159,10 +2238,12 @@ dojo.provide("qd.services.online.queues");
 					dfd.errback(err, ioArgs);
 				}
 			}, signer), false);
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		//	specific things
-		atHome: function(kwArgs){
+		atHome: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's At Home queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "at_home";
 			var dfd = this.fetch(kwArgs);
@@ -2185,61 +2266,55 @@ dojo.provide("qd.services.online.queues");
 					}
 				});
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		discs: function(kwArgs){
+		discs: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's disc queue.
 			kwArgs = kwArgs || {};
-			kwArgs.url = "queues/disc";
+			kwArgs.url = "queues/disc/available";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-			//	console.log("discs: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		saved: function(kwArgs){
+		saved: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's saved discs.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "queues/disc/saved";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-			//	console.log("saved discs: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		instant: function(kwArgs){
+		instant: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's instant queue.
 			kwArgs = kwArgs || {};
-			kwArgs.url = "queues/instant";
+			kwArgs.url = "queues/instant/available";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-			//	console.log("instant: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		watched: function(kwArgs){
+		watched: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's instant watched queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/watched";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-			//	console.log("watched: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		shipped: function(kwArgs){
+		shipped: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's shipped disc history.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/shipped";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-				console.log("shipped: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		returned: function(kwArgs){
+		returned: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's returned disc history.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/returned";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-				console.log("returned: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 
 		/*=====
@@ -2262,7 +2337,7 @@ dojo.provide("qd.services.online.queues");
 			//		The errback function on failure.
 		 }
 		 =====*/
-		modify: function(/* qd.services.online.queues.add.__AddArgs */kwArgs){
+		modify: function(/* qd.services.online.queues.add.__ModifyArgs */kwArgs){
 			//	summary:
 			//		Add or move an item in a queue.  Note that for the online
 			//		version, we can ignore the passed title.
@@ -2298,7 +2373,7 @@ dojo.provide("qd.services.online.queues");
 				}
 			}, signer);
 			dojo.xhrPost(args);
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		/*=====
 		 qd.services.online.queues.remove.__RemoveArgs = function(url, guid, title, result, error){
@@ -2341,7 +2416,7 @@ dojo.provide("qd.services.online.queues");
 					dfd.errback(err, ioArgs);
 				}
 			}, signer));
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		cache: function(/* String */queue, /* Array */list){
 			//	summary:
@@ -2382,7 +2457,20 @@ dojo.provide("qd.services.online.user");
 (function(){
 	var ps = qd.services.parser;
 	dojo.mixin(qd.services.online.user, {
-		fetch: function(kwArgs){
+		//	summary:
+		//		The online-based service to fetch user information (user name, prefs, etc.)
+
+		/*=====
+		qd.services.onilne.user.fetch.__FetchArgs = function(result, error){
+			//	summary:
+			//		The keyword arguments object passed to fetch.
+			//	result: Function?
+			//		The callback to be fired on success.
+			//	error: Function?
+			//		The errback to be fired in case of an error.
+		}
+		=====*/
+		fetch: function(/* qd.services.online.user.fetch.__FetchArgs */kwArgs){
 			//	summary:
 			//		Fetch the current user's information from the Netflix servers.
 			var dfd = new dojo.Deferred(),
@@ -2400,7 +2488,7 @@ dojo.provide("qd.services.online.user");
 					dfd.errback(err);
 				}
 			}, signer), false);
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();
@@ -2577,7 +2665,8 @@ dojo.provide("qd.services.online");
 			}, 2000);
 		},
 		onSyncNeeded: function(/* Integer */n){
-			//	stub for connecting to for the sync process.
+			//	summary:
+			//		stub for connecting to for the sync process.
 		},
 		synchronize: function(){
 			//	summary:
@@ -2589,6 +2678,8 @@ dojo.provide("qd.services.online");
 			//		Stub for when the synchronization process is complete.
 		},
 		onSyncItemStart: function(/* String */prompt){
+			//	summary:
+			//		Stub for when an item is about to be executed.
 		},
 		onSyncItemComplete: function(){
 			//	summary:
@@ -2667,16 +2758,26 @@ dojo.provide("qd.services.offline.feeds");
 	}
 
 	dojo.mixin(qd.services.offline.feeds, {
+		//	summary:
+		//		The offline-based service for fetching cached Netflix public RSS feeds.
 		list: function(){
-		  return rssFeeds.top25;
+			//	summary:
+			//		Return the list of top 25 feeds.
+			return rssFeeds.top25;
 		},
 		top100: function(){
+			//	summary:
+			//		Return the top 100 feed.
 			return rssFeeds.top100;
 		},
 		newReleases: function(){
+			//	summary:
+			//		Return the New Releases feed.
 			return rssFeeds.newReleases;
 		},
-		fetch: function(/* Object */kwArgs){
+		fetch: function(/* qd.services.online.feeds.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the given feed information out of the database cache.
 			var dfd = util.prepare(kwArgs), feed = getFeedObject(kwArgs.url);
 			if(feed && feed.xml){
 				var xml = new DOMParser().parseFromString(feed.xml, "text/xml");
@@ -2690,7 +2791,7 @@ dojo.provide("qd.services.offline.feeds");
 			} else {
 				dfd.errback(new Error("qd.service.feeds.fetch: there is no XML cache for this feed."), feed.term);
 			}
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();
@@ -2707,10 +2808,16 @@ dojo.provide("qd.services.offline.titles");
 		util = qd.services.util;
 	
 	dojo.mixin(qd.services.offline.titles, {
+		//	summary:
+		//		The offline-based service to pull title information (movies, TV shows, etc.) out of the cache.
 		save: function(/* Object */item){
+			//	summary:
+			//		Save the passed item.  Redundant but necessary to not break app code.
 			qd.services.online.titles.save(item);
 		},
 		clear: function(){
+			//	summary:
+			//		Clear all of the titles out of the cache.
 			qd.services.online.titles.clear();
 		},
 		find: function(/* qd.services.online.titles.find.__FindArgs */kwArgs){
@@ -2759,9 +2866,11 @@ dojo.provide("qd.services.offline.titles");
 					dfd.errback(result);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		fetch: function(/* qd.services.online.titles.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch full title information out the cache and return it.
 			var dfd = util.prepare(kwArgs);
 			//	Check the cache first.
 
@@ -2791,9 +2900,11 @@ dojo.provide("qd.services.offline.titles");
 					}, 10);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		autosuggest: function(/* on.titles.autosuggest.__AutosuggestArgs */kwArgs){
+			//	summary:
+			//		Return up to 10 terms out of the cache that sort of match the passed string.
 			var dfd = util.prepare(kwArgs);
 			var sql = "SELECT 1 AS main, title FROM Title WHERE SUBSTR(title, 0, :length) = :term "
 				+ "UNION SELECT 2 AS main, title FROM Title WHERE title LIKE :like "
@@ -2815,10 +2926,11 @@ dojo.provide("qd.services.offline.titles");
 					}, 10);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		rated: function(/* qd.services.online.titles.rated.__RatedArgs */kwArgs){
-			//	should have an array of guids.
+			//	summary:
+			//		Return any cached ratings info based on the passed set of title guids.
 			var dfd = new dojo.Deferred();
 
 			db.execute({
@@ -2842,7 +2954,7 @@ dojo.provide("qd.services.offline.titles");
 					dfd.callback(a);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		rate: function(/* qd.services.online.titles.rate.__RateArgs */kwArgs){
 			//	summary:
@@ -2876,9 +2988,11 @@ dojo.provide("qd.services.offline.titles");
 				}
 			});
 
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		recommendations: function(kwArgs){
+		recommendations: function(/* qd.services.titles.online.recommendations.__RecArgs */kwArgs){
+			//	summary:
+			//		Get any recommendations out of the cache and return them.
 			var dfd = util.prepare(kwArgs),
 				sql = "SELECT DISTINCT r.guid AS guid, r.title AS title, t.json AS json "
 					+ "FROM Recommendation r "
@@ -2910,7 +3024,7 @@ dojo.provide("qd.services.offline.titles");
 					dfd.errback(data);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}		
 	});
 })();
@@ -2927,20 +3041,28 @@ dojo.provide("qd.services.offline.queues");
 		util = qd.services.util;
 
 	dojo.mixin(qd.services.offline.queues, {
+		//	summary:
+		//		The offline-based service for queue information.  All of this runs off the internal cache.
 		etag: function(/* String */queue, /* String? */tag){
-			return qd.services.online.queues.etag(queue, tag);
+			//	summary:
+			//		Get the last etag for the specified queue.
+			return qd.services.online.queues.etag(queue, tag);	//	String
 		},
 		clear: function(){
+			//	summary:
+			//		Clear out the queue cache.
 			qd.services.online.queues.clear();
 		},
 		fetch: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the queue information based on the passed partial URL.
 			var dfd = util.prepare(kwArgs);
 			var sql = "SELECT * FROM QueueCache WHERE queue=:queue",
 				queue = "disc";
 
 			if(kwArgs.url == "queues/disc/saved"){ queue = "saved"; }
+			else if(kwArgs.url.indexOf("queues/instant")>-1){ queue = "instant"; }
 			else if(kwArgs.url == "at_home"){ queue = "at_home"; }
-			else if(kwArgs.url == "queues/instant"){ queue = "instant"; }
 			else if(kwArgs.url == "rental_history/watched"){ queue = "watched"; }
 			else if(kwArgs.url.indexOf("rental_history")>-1){ queue = "history"; }
 			
@@ -2967,72 +3089,89 @@ dojo.provide("qd.services.offline.queues");
 					dfd.errback(data);
 				}
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		atHome: function(kwArgs){
+		atHome: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's At Home queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "at_home";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 				console.log("offline at home: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		discs: function(kwArgs){
+		discs: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's disc queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "queues/disc";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 			//	console.log("discs: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		saved: function(kwArgs){
+		saved: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's saved discs.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "queues/disc/saved";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 			//	console.log("saved discs: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		instant: function(kwArgs){
+		instant: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's instant queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "queues/instant";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 			//	console.log("instant: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		watched: function(kwArgs){
+		watched: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's instant watched queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/watched";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 			//	console.log("watched: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		shipped: function(kwArgs){
+		shipped: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's shipped disc history.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/shipped";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 				console.log("shipped: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		returned: function(kwArgs){
+		returned: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's returned disc history.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/returned";
 			var dfd = this.fetch(kwArgs);
 			dfd.addCallback(function(arr){
 				console.log("returned: ", arr);
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		modify: function(/* qd.services.online.queues.add.__AddArgs */kwArgs){
+		modify: function(/* qd.services.online.queues.add.__ModifyArgs */kwArgs){
+			//	summary:
+			//		Store the passed action in the transaction queue for sync when returning
+			//		online.
 			var dfd = util.prepare(kwArgs),
 				item = qd.services.item(kwArgs.guid),
 				title = kwArgs.title || "";
@@ -3042,7 +3181,7 @@ dojo.provide("qd.services.offline.queues");
 				setTimeout(function(){
 					dfd.callback({});
 				}, 10);
-				return dfd;
+				return dfd;	//	dojo.Deferred
 			}
 
 			var sql = "INSERT INTO TransactionQueue (method, args, prompt, dateAdded) "
@@ -3080,9 +3219,12 @@ dojo.provide("qd.services.offline.queues");
 				}
 			});
 
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		remove: function(/* qd.services.online.queues.remove.__RemoveArgs */kwArgs){
+			//	summary:
+			//		Store the remove queue item command in the transaction queue for later
+			//		sync when the user returns online.
 			var dfd = util.prepare(kwArgs);
 			var sql = "INSERT INTO TransactionQueue (method, args, prompt, dateAdded) "
 				+ " VALUES (:method, :args, :prompt, DATETIME())";
@@ -3101,7 +3243,7 @@ dojo.provide("qd.services.offline.queues");
 					dfd.callback({ code: 200 });
 				}
 			});		
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		cache: function(){ return; },
 		addMovieById: function(/* String */movieId, target, /* String */queue){
@@ -3165,6 +3307,8 @@ dojo.provide("qd.services.offline.user");
 
 (function(){
  	dojo.mixin(qd.services.offline.user, {
+		//	summary:
+		//		Return the user information out of the cache.
 		fetch: function(){
 			//	summary:
 			//		Return the cached user object if we are authorized.
@@ -3176,7 +3320,7 @@ dojo.provide("qd.services.offline.user");
 			setTimeout(function(){
 				dfd.callback(qd.app.user());
 			}, 10);
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();
@@ -3199,20 +3343,14 @@ dojo._hasResource["qd.services.authorization"] = true;
 dojo.provide("qd.services.authorization");
 
 
-
-//	takes the place of qd.oauth's handshake process.
 (function(){
 	var auth = qd.services.authorization;
 	
 	auth.request = function(){
 		//	summary:
-		//		In the event of a new user, we need to
-		//		request a user's access token.  This is
-		//		done through a non-standard handshake 
-		//		process.
-		//
-		//		Based on Mike Wilcox's original oauth
-		//		handshake.
+		//		In the event of a new user, we need to request a user's access token.  This is
+		//		done through a non-standard handshake process. Based on Mike Wilcox's original 
+		//		oauth handshake.
 
 		var dfd = new dojo.Deferred(),
 			token = qd.app.authorization;
@@ -3221,20 +3359,16 @@ dojo.provide("qd.services.authorization");
 			url: "http://api.netflix.com/oauth/request_token",
 			handleAs: "text",
 			error: function(err, ioArgs){
-				console.warn("qd.services.authorization.request: error getting initial request token.");
-				console.error(ioArgs.xhr.responseText);
 				dfd.errback("auth", ioArgs.xhr.responseText);
 			},
 			load: function(response, ioArgs){
 				//	this should force us to open the window for the Netflix auth handshake.
-				console.log("qd.services.authorization.request: initial handshake complete.");
 				var a = response.split("&"),
 					o = {};
 				dojo.forEach(a, function(item){
 					var pair = item.split("=");
 					o[pair[0]] = unescape(pair[1]);
 				});
-				console.log("Initial handshake items: ", o);
 
 				var url = "http://api-user.netflix.com/oauth/login?"
 					+ "application_name=" + o.application_name
@@ -3262,7 +3396,6 @@ dojo.provide("qd.services.authorization");
 				var v = setInterval(function(){
 					var wurl = win1._window.location;
 					if(wurl != url){
-						console.log("Handshake window URL change: ", wurl);
 						if(!seenOnce && wurl=="https://api-user.netflix.com/oauth/login"){
 							seenOnce = true;
 							return;
@@ -3272,11 +3405,9 @@ dojo.provide("qd.services.authorization");
 							return;
 						}
 						else if(wurl.indexOf("Failed")>0){
-							console.warn("Bad username or password in the handshake window.");
 							//	TODO: fire off the errback and kill the timer?
 							return;
 						}
-						console.warn("Handshake succeeded.");
 						clearInterval(v);
 						v = null;
 						win1.close();
@@ -3284,7 +3415,6 @@ dojo.provide("qd.services.authorization");
 				}, 1000);
 				var c2 = dojo.connect(win1, "onClose", function(){
 					if(v){
-						console.warn("User did not try to authorize!");
 						dfd.errback("user");
 						clearInterval(v);
 						dojo.disconnect(c2);
@@ -3296,11 +3426,9 @@ dojo.provide("qd.services.authorization");
 						url: "http://api.netflix.com/oauth/access_token",
 						handleAs: "text",
 						error: function(err, ioArgs){
-							console.error(ioArgs.xhr.responseText);
 							dfd.errback("auth");
 						},
 						load: function(response, ioArgs){
-							console.warn("ACCESS GRANTED: ", response);
 							var a = response.split("&"), o = {};
 							dojo.forEach(a, function(item){
 								var p = item.split("=");
@@ -3315,7 +3443,7 @@ dojo.provide("qd.services.authorization");
 		};
 
 		dojo.xhrGet(dojox.io.OAuth.sign("GET", kwArgs, token), false);
-		return dfd;
+		return dfd;		//	dojo.Deferred
 	};
 })();
 
@@ -3340,7 +3468,7 @@ dojo.provide("qd.services");
 		network = qd.services.network,
 		db = "queued.db",
 		dbProp = "OUhxbVZ1Mtmu4zx9LzS5cA==",
-		pwd = storage.item(dbProp);
+		pwd;
 
 	dojo.connect(storage, "onClear", function(){
 		//	push the database access info back into storage.  Basically if we don't have
@@ -3352,6 +3480,9 @@ dojo.provide("qd.services");
 
 	qd.services._forceCreate = false;
 	qd.services.init = function(){
+		//	summary:
+		//		Initialize the Queued services.
+		pwd = storage.item(dbProp);
 		if(!pwd){
 			//	generate a new password for the database service and store it.
 			var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*~?0123456789-_abcdefghijklmnopqrstuvwxyz",
@@ -3375,13 +3506,13 @@ dojo.provide("qd.services");
 		//		work for *any* object in the system, not just
 		//		titles.
 		if(dojo.isString(item)){
-			return registry[item] || null;
+			return registry[item] || null;	//	Object
 		}
 
 		//	assume it's an object.
 		if(item && !item.guid){
 			console.warn("qd.services.item: the passed item has no guid!", item);
-			return null;
+			return null;	//	Object
 		}
 
 		var tmp = registry[item.guid];
@@ -3393,17 +3524,19 @@ dojo.provide("qd.services");
 		if(item.title){
 			titleRegistry[item.title] = item;
 		}
-		return item;
+		return item;	//	Object
 	};
 
 	qd.services.itemByTerm = function(/* String */term){
 		//	summary:
 		//		Find any objects in the registry based on a title.
 		//		If found, return it.
-		return titleRegistry[term];
+		return titleRegistry[term];	//	Object
 	};
 
 	qd.services.clearItems = function(){
+		//	summary:
+		//		Clear out any in-memory items that have been cached.
 		registry = {};
 		titleRegistry = {};
 	};
@@ -3451,9 +3584,9 @@ qd.app = new (function(){
 		//		Return a float version of the version of Queued.
 		var info = this.info;
 		if(info.version){
-			return parseFloat(info.version, 10);
+			return parseFloat(info.version, 10);	//	Float
 		}
-		return null;
+		return null;	//	Float
 	});
 
 	//	
@@ -3462,7 +3595,7 @@ qd.app = new (function(){
 		//	close all the windows and check to make sure they don't stop
 		//	the event; if they don't, then go ahead and fire our own exiting
 		//	event.
-		air.trace("CLOSURE EXIT")
+		//air.trace("CLOSURE EXIT")
 		if(evt.isDefaultPrevented()){
 			return;	//	don't do anything
 		}
@@ -3478,13 +3611,11 @@ qd.app = new (function(){
 	this.onExit = function(/* air.Event */evt){
 		//	summary:
 		//		Stub for handling any exiting events.
-		console.log("qd.app.onExit: FIRING");
 	};
 	this.exit = function(){
 		//	summary:
 		//		Manually exit the application and call any finalizers.
 		//		This *should* call our onExit handlers, above.
-		console.warn("APP EXIT")
 		var evt = new air.Event(air.Event.EXITING, false, true); 
 		_app.dispatchEvent(evt); 
 		if(!evt.isDefaultPrevented()){
@@ -3499,9 +3630,13 @@ qd.app = new (function(){
 		return _app.timeSinceLastUserInput;	 //	int
 	});
 	this.__defineGetter__("idleThreshold", function(){
-		return _app.idleThreshold;
+		//	summary:
+		//		Return how long the app will wait (in seconds) before firing the onIdle event.
+		return _app.idleThreshold;	//	Integer
 	});
-	this.__defineSetter__("idleThreshold", function(/* int */n){
+	this.__defineSetter__("idleThreshold", function(/* Integer */n){
+		//	summary:
+		//		Set the idle threshold for the application.
 		_app.idleThreshold = n;
 	});
 
@@ -3526,7 +3661,7 @@ qd.app = new (function(){
 	};
 
 	//	checking to see if this is the first time running the app.
-	this.onUpgrade = function(oldVersion, newVersion){
+	this.onUpgrade = function(/* Float */oldVersion, /* Float */newVersion){
 		//	summary:
 		//		Stub for when the application is upgraded
 		console.warn("Update detected!  Upgrading to version " + newVersion);
@@ -3549,9 +3684,8 @@ qd.app = new (function(){
 		console.log(info);
 	};
 
-//	dojo.addOnLoad(function(){
 	(function(){
-		//	look for the existance of a file.
+		//	look for the existence of a file.
 		var info = self.info,
 			version = parseFloat(info.version, 10),
 			file = air.File.applicationStorageDirectory.resolvePath("preferences/version.txt"),
@@ -3581,11 +3715,61 @@ qd.app = new (function(){
 			stream.close(); 
 		}
 	})();
-//	});
+
+	//	set up the application updater.
+	var updater;
+	dojo.addOnLoad(dojo.hitch(this, function(){
+		try{
+			updater = new runtime.air.update.ApplicationUpdaterUI();
+			updater.configurationFile = new air.File("app:/updateConfig.xml");
+			updater.addEventListener("initialized", function(evt){
+				//	let the app finish it's thing first, then go hit for updates.
+				setTimeout(function(){
+					updater.checkNow();
+				}, 15000);
+			});
+			updater.initialize();
+		} catch(ex){
+			//	swallow this error; for some reason Linux doesn't like
+			//	the application updater.
+		}
+	}));
 
 	//	END APP EVENTS
 	
 	//	Authorization setup.
+	/*=====
+	qd.app.__TokenObject = function(key, secret){
+		//	summary:
+		//		A token object (key/secret pair) for use with OAuth-based services.
+		//	key: String
+		//		The public key assigned by the OAuth service.
+		//	secret: String
+		//		The private key assigned by the OAuth service.
+		this.key = key;
+		this.secret = secret;
+	};
+
+	qd.app.__AuthObject = function(consumer, token, userId, sig_method){
+		//	summary:
+		//		The token/authorization object used by Queued to make any
+		//		requests to Netflix to access protected resources.
+		//	consumer: qd.app.__TokenObject
+		//		The key/secret pair assigned to Queued by Netflix.
+		//	token: qd.app.__TokenObject?
+		//		The key/secret pair assigned to the User by Netflix.  Will
+		//		be null if the user has not completed the authorization process.
+		//	userId: String?
+		//		The ID of the user as assigned by Netflix.
+		//	sig_method: String?
+		//		The signature method to be used by the OAuth service. HMAC-SHA1 is 
+		//		the default.
+		this.consumer = consumer;
+		this.token = token;
+		this.userId = userId;
+		this.sig_method = sig_method || "HMAC-SHA1";
+	}
+	=====*/
 	var acl;
 	this.__defineGetter__("authorization", function(){
 		//	summary:
@@ -3602,7 +3786,7 @@ qd.app = new (function(){
 			};
 			qd.services.storage.item("token", acl);
 		}
-		return acl;	//	Object
+		return acl;	//	qd.app.__AuthObject
 	});
 
 	this.__defineGetter__("authorized", function(){
@@ -3610,7 +3794,7 @@ qd.app = new (function(){
 		//		Return whether or not the current user is actually authorized.
 		//		Replaces isLoggedIn().
 		var signer = this.authorization;
-		return (signer.token !== null && signer.userId !== null);
+		return (signer.token !== null && signer.userId !== null);	//	Boolean
 	});
 
 	this.authorize = function(/* String */token, /* String */secret, /* String */userId){
@@ -3633,7 +3817,7 @@ qd.app = new (function(){
 
 		//	drop it into storage.
 		qd.services.storage.item("token", o);
-		return o;
+		return o;	//	qd.app.__AuthObject
 	};
 
 	this.deauthorize = function(){
@@ -3650,7 +3834,7 @@ qd.app = new (function(){
 		qd.service.queues.clear();
 		qd.services.clearItems();
 
-		return o;
+		return o;	//	qd.app.__AuthObject
 	};
 
 	//	authorization initialization
@@ -3666,17 +3850,26 @@ qd.app = new (function(){
 	//	User information
 	var user;
 	this.user = function(/* Object? */obj){
+		//	summary:
+		//		An object that represents in memory user information.
+		//		If an object is passed, this acts as a setter; if not,
+		//		it acts as a getter.  If there is no user object in
+		//		memory and it is called as a getter, this will retrieve
+		//		it from local storage, if it exists.
 		if(obj!==undefined){
 			user = obj;
 			this.save();
-			return user;
+			return user;	//	Object
 		}
 		if(user){
-			return user;
+			return user;	//	Object
 		}
-		return user = qd.services.storage.item("user");
+		return user = qd.services.storage.item("user");	//	Object
 	};
+
 	this.save = function(){
+		//	summary:
+		//		Store the user object into encrypted local storage.
 		var _s = new Date();
 		qd.services.storage.item("user", user);
 		console.warn("Time to save user info into storage: " + (new Date()-_s) + "ms.");
@@ -3709,6 +3902,8 @@ qd.app = new (function(){
 
 	//	view the source code.
 	this.source = function(){
+		//	summary:
+		//		Open the Adobe source code viewer so one can browse the source tree.
 		try {
 			var vs = air.SourceViewer.getDefault();
 			//	Note that the following exclusions are aimed at a release, and not a debug session.
@@ -3724,25 +3919,26 @@ qd.app = new (function(){
 	};
 
 	/*=====
-	 qd.app.underlay.__Args = function(params){
-		//	params: Object
-		//		Parameters governing the underlay behavior:
-		//		* loader (Boolean, default true) specifies whether or not
-		//		to show the spinner/loading box.
-		//		* bodyOnly (Boolean, default true) specifies whether or
-		//		not to cover the page header with the underlay, as opposed
-		//		to covering only the page content/body area.
-		this.params = params;
+	 qd.app.underlay.__Args = function(loader, bodyOnly){
+	 	//	summary:
+		//		Keyword arguments object to be passed to qd.app.underlay.show.
+		//	loader: Boolean?
+		//		Specifies whether to show the loading/spinner box.  Defaults to true.
+		//	bodyOnly: Boolean?
+		//		Specifies whether or not to cover the page header with an underlay element,
+		//		as opposed to just covering the body area. Defaults to true.
+		this.loader = loader!==undefined? loader: true;
+		this.bodyOnly = bodyOnly!==undefined? bodyOnly: true;
 	 }
 	=====*/ 
-
-	// Here's a simple underlay object; call the show() and hide() methods
-	// to toggle it on and off. The object tracks the calls with a simple
-	// counter and only hides the underlay when the number of calls to
-	// hide() matches the number of calls to show().
 	this.underlay = new (function(){
+		//	summary:
+		//		A singleton object to handle UI blocking for calls that should not
+		//		allow user interaction.
 		var inc=0;
-		this.show = function(/* qd.app.underlay.show.__Args */kwArgs){
+		this.show = function(/* qd.app.underlay.__Args */kwArgs){
+			//	summary:
+			//		Show the underlay based on the passed kwArgs.
 			if(++inc){
 				var u1 = dojo.byId("topMoviesUnderlay"),
 					u2 = dojo.byId("queueUnderlay"),
@@ -3764,6 +3960,8 @@ qd.app = new (function(){
 			}
 		};
 		this.hide = function(){
+			//	summary:
+			//		Hide the underlay.
 			if(!--inc){
 				var n = dojo.byId("loaderNode");
 				if(dojo.style(n, "display") == "block"){
@@ -3783,12 +3981,17 @@ qd.app = new (function(){
 	})();
 
 	this.loadingIcon = new (function(){
+		//	summary:
+		//		A singleton object that represents the loading icon at the top right.
 		var showing = false, timer;
 		this.__defineGetter__("showing", function(){
-			return showing;
+			//	summary:
+			//		Returns whether or not the icon is currently visible.
+			return showing;	//	Boolean
 		});
 		this.show = function(){
-			//	error icon always takes precedence.
+			//	summary:
+			//		Show this icon.  If the error icon is visible, don't show it.
 			if(qd.app.errorIcon.showing){ return; }
 			if(showing){ return; }
 
@@ -3806,6 +4009,8 @@ qd.app = new (function(){
 			}), 10000);
 		};
 		this.hide = function(){
+			//	summary:
+			//		Hide this icon.
 			dojo.query(".loadingIndicator, .bgLoadingSpinner").forEach(function(item){
 				item.style.display = "none";
 			});
@@ -3818,11 +4023,17 @@ qd.app = new (function(){
 	})();
 
 	this.errorIcon = new (function(){
+		//	summary:
+		//		A singleton object that controls the alert/error icon at the top right.
 		var showing = false;
 		this.__defineGetter__("showing", function(){
-			return showing;
+			//	summary:
+			//		Returns whether or not the icon is currently visible.
+			return showing;	//	Boolean
 		});
 		this.show = function(){
+			//	summary:
+			//		Show the icon.
 			if(showing){ return; }
 
 			if(qd.app.loadingIcon.showing){
@@ -3838,6 +4049,8 @@ qd.app = new (function(){
 			showing = true;
 		};
 		this.hide = function(){
+			//	summary:
+			//		Hide the icon.
 			dojo.query(".loadingIndicator, .offlineIndicator").forEach(function(item){
 				item.style.display = "none";
 			});
@@ -3846,6 +4059,8 @@ qd.app = new (function(){
 	})();
 
 	this.errorTooltip = new (function(){
+		//	summary:
+		//		A singleton object that controls the error tooltip, shown at the top right.
 		var fader, timeout, delay = 5000, duration = 1600, endHandle;
 		this.show = function(/* String */title, /* String */msg, /* Boolean? */persistIcon){
 			//	summary:
@@ -3976,8 +4191,6 @@ qd.app = new (function(){
 				break;
 		}
 
-		console.log("app switch page: " + page, dijit.byId("contentNode"));
-
 		dijit.byId("contentNode").selectChild(divId);	
 		qd.app.selectNav(menuId, "bigNav");
 		if(page == "topMovies"){
@@ -4075,6 +4288,8 @@ dojo.provide("qd.app.queueList");
 	var REMOVAL_CONFIRMATION_TIMER_DURATION = 5000; // milliseconds to show the keep/remove button
 
 	var create = function(tagName, text, _class, parent){
+		//	summary:
+		//		Development helper to create nodes.
 
 		var node = dojo.doc.createElement(tagName);
 
@@ -4088,7 +4303,13 @@ dojo.provide("qd.app.queueList");
 
 	var _reg = new RegExp(/\$\{.*?\}/gi);
 
-	var makeTemplate = function(str, item, dbg){
+	var makeTemplate = function(/* String */str, /* Object */item){
+		//	summary:
+		//		Build a queue DOM template from the given string, using
+		//		simple ${variable} substitution.
+		//	item:
+		//		Netflix item to use for template variables, which should be
+		//		named properties on the object.
 		var tpl = "";
 		var props = [];
 		dojo.forEach(str.match(_reg), function(p){
@@ -4181,13 +4402,16 @@ dojo.provide("qd.app.queueList");
 							+ '</span>'
 						+ '</div></td>'
 					+ '</tr>',
-		
+
 		noItems: '<tr class="listQueuedRow noItems">'
 							+ '<td colspan="${colspan}">There are no items in this list.</td>'
 						+ '</tr>'
 	};
 
 	qd.app.nonItem = function(){
+		//	summary:
+		//		Initialize a queue to show the "No items found" display rather
+		//		than a table full of items.
 		this.item = {};
 		this.constructor = function(options, parentNode){
 			dojo.mixin(this, options);
@@ -4205,7 +4429,7 @@ dojo.provide("qd.app.queueList");
 		};
 		this.constructor.apply(this, arguments);
 	};
-	
+
 	qd.app.queueItem = function(){
 		this.id = "";
 		this.item = {};
@@ -4213,7 +4437,7 @@ dojo.provide("qd.app.queueList");
 		this.type = "";
 		this.parent = null;
 		this.resetFormat = "";
-		
+
 		this.__defineGetter__("position", function() {
 			return this.item.position;
 		});
@@ -4225,11 +4449,16 @@ dojo.provide("qd.app.queueList");
 			}
 		});
 
-		this.constructor = function(options, parentNode){
+		this.constructor = function(/* Object */options, /* Node */parentNode){
+			//	summary:
+			//		Build up a queue item (one row in the display), instantiate
+			//		the item in the DOM, etc.
+			//	options:
+			//		Property bag to use as a mixin on this queue item.
+			//	parentNode:
+			//		Node in which to insert this queue item into the DOM.
 			dojo.mixin(this, options);
-			
-			//console.log(" ---- ", this.item.title.title, this.type, " item::", this.item)
-			
+
 			this.id = this.item.id;
 			this.guid = this.item.guid;
 			this.item.genreStr = this.item.title.categories[0];
@@ -4261,7 +4490,11 @@ dojo.provide("qd.app.queueList");
 		};
 
 		this.postDom = function(){
-			//console.warn("POSTDOM", this.position, this.item.position)
+			//	summary:
+			//		Trigger function to execute after the queue item's DOM
+			//		representation is added to the page. Sets up the textbox
+			//		containing the item's position and registers the key
+			//		handlers for it.
 			if (this.textbox) {
 				this.textbox.value = this.position;
 				this.textbox.maxLength = 3;
@@ -4270,7 +4503,6 @@ dojo.provide("qd.app.queueList");
 						return true;
 					}
 					var k = evt.keyCode;
-					//console.log("press:", k, evt.keyIdentifier, evt);
 					if (k > 31 && (k < 48 || k > 57)) {
 						dojo.stopEvent(evt);
 						return false;
@@ -4280,8 +4512,15 @@ dojo.provide("qd.app.queueList");
 			}
 		};
 
-		this.setRatingData = function(user, pred, avg){
-		//	console.log ("item.set rating", ((this.ratingNode)?"true":"false"));
+		this.setRatingData = function(/* Number */user, /* Number */pred, /* Number */avg){
+			//	summary:
+			//		Create the star rating widget for this queue item.
+			//	user:
+			//		The user rating value (1-5, "not_interested", "no_opinion").
+			//	pred:
+			//		The predicted rating value (1-5, "not_interested", "no_opinion").
+			//	avg:
+			//		The member average rating value (1-5, "not_interested", "no_opinion").
 			var node=this.ratingNode, type="average", rating=0;
 			if(node) {
 				if(user > 0){
@@ -4299,8 +4538,11 @@ dojo.provide("qd.app.queueList");
 			}
 		};
 
-		this.attachEvents = function(node){
-			//console.log("item attachEvents")
+		this.attachEvents = function(/* Node */node){
+			//	summary:
+			//		Register event connections defined in the queue item's template.
+			//	node:
+			//		The item's DOM node.
 			this.domNode = node;
 			var nodes = this.domNode.getElementsByTagName("*");
 			dojo.forEach(nodes, function(n){
@@ -4318,35 +4560,41 @@ dojo.provide("qd.app.queueList");
 		};
 
 		this.destroy = function(){
+			//	summary: Tear down the queue item.
 			dojo.forEach(this._connects, dojo.disconnect, dojo);
 			dojo._destroyElement(this.domNode);
 			delete this;
 		};
 
-		this.update = function(newItem){
+		this.update = function(/* Object */newItem){
 			// summary:
-			//		New item returned from server
-			//		Usually just new position
+			//		New item returned from server (usually just the new position).
 			this.item = newItem;
 		};
 
 		this.reset = function(){
 			// summary:
-			//		If the server call is unsuccessful
-			//		do any resetting here
+			//		If the server call is unsuccessful, do any resetting here.
 			this.textbox.value = this.position;
-			console.log("reset", this.resetFormat, this.selFormat)
 			if(this.resetFormat){
 				setTimeout(dojo.hitch(this, function(){
 					this.item.preferredFormatStr = this.resetFormat;
 					this.resetFormat = "";
 					this.selFormat.value =this.selFormat.selected = this.item.preferredFormatStr;
-					console.warn("RESET!", this.item.preferredFormatStr, this.selFormat.value, this.selFormat.selected)
 				}), 500)
 			}
 		};
 
-		function toggleRemoveButtonState(outNode, inNode, duration){
+		function toggleRemoveButtonState(/* Node */outNode, /* Node */inNode, /* Number? */duration){
+			//	summary:
+			//		Animated toggle to switch back and forth between the
+			//		"(-)" (delete) and "Remove | Keep" queue item buttons.
+			//	outNode:
+			//		Button node to fade out.
+			//	inNode:
+			//		Button node to fade in.
+			//	duration:
+			//		Optional duration in milliseconds. Default 200.
 			dojo.style(inNode, {display:"inline-block",opacity:0});
 			var anim = dojo.fx.combine([
 					dojo.fadeOut({node:outNode, duration:duration || 200}),
@@ -4360,21 +4608,26 @@ dojo.provide("qd.app.queueList");
 		}
 
 		this.cancelRemoveButtonTimer = function(){
+			//	summary:
+			//		Turn off the Remove button timer, which resets the
+			//		"Remove | Keep" button back to "(-)" (delete) after
+			//		a few seconds of inactivity.
 			clearTimeout(this.confirmationTimer);
 			this.confirmationTimer = null;
 		}
 
 		this.onFormatChange = function(evt){
-			console.log("onFormatChange:", evt.target.value);
+			//	summary:
+			//		Handle resetting the item's format.
 			if(evt.target.value!=this.item.preferredFormatStr){
 				this.resetFormat = this.item.preferredFormatStr;
 				this.item.preferredFormatStr=evt.target.value;
 				this.parent.changeFormat(this);
-			}	
+			}
 		};
-		
+
 		this.onRemClick = function(){
-			console.log("REMOVE clicked:", this.item.title);
+			//	summary: Show the "Remove | Keep" button for a few seconds.
 			toggleRemoveButtonState(this.removeButtonNode, this.confirmButtonNode);
 			// FIXME: this if() shouldn't be necessary, but since this method gets called
 			//        twice per click, this ensures that the toggle only happens once
@@ -4389,22 +4642,24 @@ dojo.provide("qd.app.queueList");
 		};
 
 		this.onKeepClick = function(){
-			//console.log("KEEP clicked:", this.item.title);
+			//	summary: Cancel the item deletion process; keep the item.
 			this.cancelRemoveButtonTimer();
 			toggleRemoveButtonState(this.confirmButtonNode, this.removeButtonNode);
 		};
 
 		this.onConfirmRemoveClick = function(){
-			//console.log("CONFIRM REMOVE clicked:", this.item.title);
+			//	summary: Remove an item from the queue.
 			this.cancelRemoveButtonTimer();
 			this.parent.remove(this);
 		};
-		
+
 		this.onProblemClick = function(){
+			//	summmary: Show the netflix.com page for reporting problems with discs.
 			air.navigateToURL(new air.URLRequest("https://www.netflix.com/DiscProblems"));
 		};
 		this.onPlayClick = function(){
-			console.log("PLAY clicked:", this.item.guid);
+			//	summary: Development helper to try and play Instant Watch titles in AIR.
+
 			//	test: try to open up a new AIR window using the url stuff from Netflix's api
 			var href = "http://www.netflix.com/CommunityAPIPlay?devKey="
 					+ qd.app.authorization.consumer.key
@@ -4416,34 +4671,35 @@ dojo.provide("qd.app.queueList");
 		};
 
 		this.onTitleClick = function(){
-			//console.log("clicked:", this.item.title, this.item.id);
+			//	summary: Show the movie info detail dialog for this item.
 			qd.app.movies.showInfo(this.item.guid);
 		};
 
-		this.onTitleOver = function(){
-			console.log("over:: " + this.item.title.title, this.item);
-		};
+		this.onTitleOver = function(){};
 
-		this.onTitleOut = function(){
-			//console.log("out");
-		};
+		this.onTitleOut = function(){};
 
 		this.onTopClick = function(){
+			//	summary: Move this queue item to the top of the queue (position 1)
 			if(this.position>1){
-				this.parent.reorder(this, 1);	
+				this.parent.reorder(this, 1);
 			}
 		};
 
 		this.onTextKeyUp = function(evt){
+			//	summary:
+			//		Monitor key events in the item's position textbox, and on
+			//		Enter, reorder the queue accordingly.
 			var k = evt.keyCode;
-			//console.log("UP:", k, evt.keyIdentifier, evt);
 			if(k == 13){
 				this.parent.reorder(this, this.textbox.value);
 			}
 		};
 
 		this.onTextBlur = function(evt){
-			//console.log("blur", this.textbox.value, "=", this.position);
+			//	summary:
+			//		Reorder the queue if the user changed the value of the
+			//		item's position textbox.
 			if(this.textbox.value != this.position){
 				this.textbox.value = this.position;
 			}
@@ -4463,11 +4719,16 @@ dojo.provide("qd.app.queueList");
 		this.dndSource = null;
 
 		this.constructor = function(/* Object */options, /* Node */parentNode){
+			//	summary:
+			//		Initialize a queue by setting up drag and drop, etc.
+			//	options:
+			//		Property bag to use as a mixin on this queue.
+			//	parentNode:
+			//		Node in which to insert this queue item into the DOM.
 			dojo.mixin(this, options);
 			if(this.type=="watched"){
-				this.result.items = dojo.filter(this.result.items, function(m, i){ if(i<this.recentWatchedAmount){ return m; }}, this); 
+				this.result.items = dojo.filter(this.result.items, function(m, i){ if(i<this.recentWatchedAmount){ return m; }}, this);
 			}
-		//	console.log(" -- - - qd.app.queueList", this.type, this.result)
 			this.domNode = dojo.byId(parentNode);
 			this.dndSource = new dojo.dnd.Source(this.domNode, {
 				accept: options.type || "movie",
@@ -4490,32 +4751,46 @@ dojo.provide("qd.app.queueList");
 				// in English: for "queue" and "instant", skip when position==null
 				return i.position || (this.type!="queue" && this.type!="instant");
 			}, this));
-		
+
 			this.noItemCheck();
 			this.onLoad();
-	//		console.info(this.type, "LIST ITEMS:", this.list)
 		};
-		
+
 		this.onLoad = function(){
-			setTimeout(dojo.hitch(qd.app.queue, "onLoad", this), 100);	
+			//	summary: Hook for code to run when the queue's data is loaded.
+			setTimeout(dojo.hitch(qd.app.queue, "onLoad", this), 100);
 		};
 		this.onChange = function(/*String*/typeOfChange){
-			qd.app.queue.onChange(this, typeOfChange);	
+			//	summary: Hook for code to run when the queue's data changes.
+			qd.app.queue.onChange(this, typeOfChange);
 		};
-		
-		this.inQueue = function(movieId){
-			return dojo.some(this.list, function(listItem){
-				return listItem.item.title.guid == movieId;
-			}, this);	//	Boolean
+
+		this.inQueue = function(/* String */movieId){
+			//	summary:
+			//		Check whether an item is in this queue.
+			//	movieId:
+			//		Netflix item guid to check.
+			var b = dojo.some(this.list, function(listItem){
+				var guid = listItem.item.title.guid;
+				return (guid == movieId);
+			}, this);
+			return b; //	Boolean
 		};
-		
-		this.inQueueByTerm = function(term){
+
+		this.inQueueByTerm = function(/* String */term){
+			//	summary:
+			//		Check whether an item is in this queue, by item title.
+			//	movieId:
+			//		Netflix item title to check.
 			return dojo.some(this.list, function(listItem){
 				return listItem.item.title.title == term;
 			}, this);
 		};
 
 		this.noItemCheck = function(){
+			//	summary:
+			//		Check to see if this queue is empty, and if so,
+			//		initialize the "no item" display.
 			if ((this.list.length == 0 && !this.noResultItem) || (this.list.length == 1 && !this.list[0])) {
 				this.noResultItem = new qd.app.nonItem({
 					type: this.type
@@ -4525,8 +4800,9 @@ dojo.provide("qd.app.queueList");
 				this.noResultItem = null;
 			}
 		};
-		
+
 		this.destroy = function(){
+			//	summary: Tear down this queue object.
 			this.dndSource.destroy();
 			dojo.forEach(this.list, function(m){
 				m.destroy();
@@ -4540,6 +4816,7 @@ dojo.provide("qd.app.queueList");
 			//	closure.
 			this.destroyed = true;
 		};
+
 		this.createItem = function(/* Object */item, /* String? */hint){
 			//	summary:
 			//		Turns the movie item provided into an object the
@@ -4582,7 +4859,7 @@ dojo.provide("qd.app.queueList");
 				type: this.type
 			}
 		};
-		
+
 		this.onDrop = function(/* Node[] */nodes){
 			//	summary:
 			//		Handle drop events coming from the DnD system; typically
@@ -4617,18 +4894,22 @@ dojo.provide("qd.app.queueList");
 			}, this);
 			this.draggingitem = null;
 		};
-		
+
 		this.onDragCancel = function(){
+			//	summary: Clean up after an aborted drag operation.
 			if(this.draggingitem){
 				dojo.style(this.draggingitem.domNode, "visibility", "visible");
 				dojo.style(this.draggingitem.ratingNode, "visibility", "visible");
 				this.draggingitem = null;
 			}
 		};
-		
-		this.highlight = function(movieId){
-			var listItem = this.byId(movieId);
-			console.log("HIGHLIGHT:", listItem);
+
+		this.highlight = function(/* String */movieId){
+			//	summary:
+			//		Run an animation to briefly highlight a dropped queue item.
+			//	movieId:
+			//		Netflix item guid to highlight.
+			var listItem = (movieId.indexOf("catalog")>-1) ? this.byTitle(movieId): this.byId(movieId);
 			if(listItem){
 				dijit.scrollIntoView(listItem.domNode);
 				var anim = dojo.animateProperty({
@@ -4641,7 +4922,7 @@ dojo.provide("qd.app.queueList");
 				}).play();
 			}
 		};
-		
+
 		this.addMovie = function(/* Object */item){
 			//	summary:
 			//		Adds movie to the list.
@@ -4651,8 +4932,6 @@ dojo.provide("qd.app.queueList");
 			//		The API allows for item to be added
 			//		a certain position. Currently not
 			//		supported by our UI.
-			console.log("ADD MOVIE TO QUEUE:", item)
-
 			var options = {
 				guid: item.guid,
 				title: item.title,
@@ -4665,21 +4944,20 @@ dojo.provide("qd.app.queueList");
 			def.addCallback(this, function(data){
 				qd.app.loadingIcon.hide();
 				if(this.destroyed){ delete this; return; }
-				console.log(">>>>>>>>>>>>>>>add movie result:", data);
 				var item = data.created[0];
 				qd.services.item(item);
-				
+
 				this.noItemCheck();
 				var listItem = this.dndSource.insertNodes(false, [item]);
 				dojo.forEach(this.list, function(m, i){
 					m.position = i + 1;
 				});
 				//this.highlight(listItem.id);
-				
+
 				qd.app.queue.getRatings([item], dojo.hitch(this, function(ratings){
 					this.setRatingData(ratings);
 				}));
-				
+
 				this.onChange("add");
 			});
 			def.addErrback(this, function(err){
@@ -4703,14 +4981,11 @@ dojo.provide("qd.app.queueList");
 		};
 
 		this.remove = function(/* Object */listItem){
-			// summary:
+			//	summary:
 			//		Triggered by the delete icon in an item
-
-			// FIXME: Seems like this code could be tighter.
 			var url=(this.type == "queue")?"queues/disc/available":(this.type=="instant")?"queues/instant/available":"queues/disc/saved";
-			
+
 			var movieId = listItem.id;
-			console.log("remove: ", listItem.guid);
 			qd.app.loadingIcon.show();
 			qd.service.queues.remove({
 				url: url,
@@ -4719,18 +4994,17 @@ dojo.provide("qd.app.queueList");
 			}).addCallback(this, function(res){
 				qd.app.loadingIcon.hide();
 				if(this.destroyed){
-			   		delete this; 
-					return; 
+			   		delete this;
+					return;
 				}
-				console.log("queueList.remove result:", res);
 				this.removeDisplayItem(listItem);
 				qd.app.movies.queueMovieChange(movieId, this.type);
 				// needs to be done after anim -> this.noItemCheck();
 			}).addErrback(this, function(err){
 				qd.app.loadingIcon.hide();
 				if(this.destroyed){
-			   		delete this; 
-					return; 
+			   		delete this;
+					return;
 				}
 				console.warn("Error on remove status:", err.status.results.message);
 				//listItem.reset();
@@ -4738,7 +5012,7 @@ dojo.provide("qd.app.queueList");
 		};
 
 		this.removeDisplayItem = function(/* Object*/listItem){
-			// summary:
+			//	summary:
 			//		The visual, animated part of removing an item
 			dojo.style(listItem.domNode, "backgroundColor", "#ff0000");
 			dojo.fadeOut({node:listItem.domNode, onEnd:dojo.hitch(this, function(){
@@ -4753,9 +5027,9 @@ dojo.provide("qd.app.queueList");
 		};
 
 		this._removeListItem = function(/* Object */listItem){
-			// summary:
+			//	summary:
 			//		After server call and animaton, finally
-			// 		remove domNode and reorder list.
+			//		remove domNode and reorder list.
 			var i = this.getIndex(listItem.id);
 			this.dndSource.delItem(listItem.domNode.id);
 			listItem.destroy();
@@ -4766,10 +5040,10 @@ dojo.provide("qd.app.queueList");
 			this.noItemCheck();
 			this.onChange("remove");
 		};
-		
+
 		this.renumber = function(/* Object*/listItem){
-			// note that position is one-based,
-			//	while index is zero-based
+			//	summary: Renumber (internally; don't update the display) the queue's items.
+			//	note: Be careful; position is one-based, while index is zero-based.
 			var i = this.getIndex(listItem.id);
 			this.list.splice(i, 1);
 			this.list.splice(listItem.position - 1, 0, listItem);
@@ -4777,24 +5051,30 @@ dojo.provide("qd.app.queueList");
 				m.position = i + 1;
 			});
 		};
-		
+
 		this.reorder = function(/* Object */listItem, /* Number */pos, /* Boolean? */animate){
-			// re ordering by a numeric input or drag, not 'top'
+			//	summary:
+			//		Reorder the queue after a position textbox change or a drag
+			//		and drop operation (but not clicking the "top" button).
+			//	listItem:
+			//		Queue list item just changed.
+			//	pos:
+			//		Item's new position.
+			//	animate:
+			//		Optional flag (default true) to indicate to animate the change.
 			if(typeof animate == "undefined"){ animate = true; }
-			
+
 			var options = {
 				guid:listItem.item.guid,
 				position:pos,
 				title: listItem.item.title.title,
 				url:(this.type == "queue")?"queues/disc":"queues/instant"
 			};
-			
+
 			qd.app.loadingIcon.show();
-			var def = qd.service.queues.modify(options);
-			def.addCallback(this, function(res){
+			qd.service.queues.modify(options).addCallback(this, function(res){
 				qd.app.loadingIcon.hide();
 				if(this.destroyed){ delete this; return; }
-				console.log(">>>>>>>>>>>>reorder result:", res);
 				if(res.code=="201" || res.code=="200"){
 					listItem.update(res.created[0]);
 					qd.services.item(res.created[0]);
@@ -4805,21 +5085,21 @@ dojo.provide("qd.app.queueList");
 				}else{
 					console.warn("reorder, bad status:", res)
 				}
-			});
-			def.addErrback(this, function(err){
+			}).addErrback(this, function(err){
 				qd.app.loadingIcon.hide();
 				console.warn("Error on reorder status:", err.status.results.message);
 				listItem.reset();
 			});
-
 		};
 
 		this.reorderDisplay = function(/* Object*/listItem){
-			this.renumber(listItem);	
+			//	summary:
+			//		Run an animation to show the queue order changing.
+			this.renumber(listItem);
 			// 	animate old row to red
 			//	move old row to new position
 			// 	animate new row from yellow to white to transparent
-			
+
 			var self = this;
 			dojo.animateProperty({
 				node: listItem.domNode,
@@ -4832,10 +5112,13 @@ dojo.provide("qd.app.queueList");
 					self.highlight(listItem.id);
 				}
 			}).play();
-		
 		};
 
 		this.attachEvents = function(){
+			//	summary:
+			//		Register event connections defined in the queue's template.
+			//	node:
+			//		The queue's DOM node.
 			dojo.query(".listQueuedRow", this.domNode).forEach(function(node, i){
 				this.list[i].attachEvents(node);
 				this.list[i].postDom();
@@ -4873,6 +5156,8 @@ dojo.provide("qd.app.queueList");
 		};
 
 		this.getIndex = function(/* String */id){
+			//	summary:
+			//		Return the internal array index of the list item having the given ID.
 			var index = -1;
 			dojo.some(this.list, function(m, i){
 				if(m.id==id){ index=i; return true;}
@@ -4894,26 +5179,25 @@ dojo.provide("qd.app.queue");
 
 
 (function(){
-	
-	var _queueTemplate = null;
-	var _atHomeTemplate = null;
-	var _instantTemplate = null;
-	var _historyTemplate = null;
-	var _watchedTemplate = null;
-	var pageCached = {};
-	var lists = ["historyList", "watchedList", "instantList", "atHomeList", "queueList", "savedList"];
-	
+
+	var _queueTemplate = null,
+	    _atHomeTemplate = null,
+	    _instantTemplate = null,
+	    _historyTemplate = null,
+	    _watchedTemplate = null,
+	    pageCached = {},
+	    lists = ["historyList", "watchedList", "instantList", "atHomeList", "queueList", "savedList"];
+
 	qd.app.queue = new (function(){
 		this.onLoad = function(/*Object*/queueList){
 			// summary:
 			//		This fires on EVERY queueList that loads
 			//		check queueList.type to determine which
 		};
-		
+
 		this.onAllLoaded = function(){
 			// summary:
 			//		Fires after all queues are loaded
-			//console.log("ON ALL LOADED")
 			if(qd.services.network.available){
 				qd.app.queue.polling.init();
 			}
@@ -4925,7 +5209,7 @@ dojo.provide("qd.app.queue");
 				}
 			});
 		};
-		
+
 		this.onChange = function(/*Object*/queueList,/*String*/typeOfChange){
 			// summary:
 			//		This fires on EVERY queueList that changes
@@ -4944,27 +5228,55 @@ dojo.provide("qd.app.queue");
 
 		this.count = 1
 		this.getItems = function(whichList){
-			//console.log("qd.qpp.queue.getItems", whichList, this[whichList], this.atHomeList, "count:", this.count++)
+			//	summary: Returns the items contained in the given list.
 			if(this[whichList]){
 				return this[whichList].result.items;
 			}
 			return [];
 		};
-		
+
 		this.isProtectedPage = function(){
-			console.log("isProtectedPage:", dijit.byId("contentNode").selectedChildWidget.id);
+			//	summary: Returns true if the currently selected page should
+			//	be protected by auth.
 			return dijit.byId("contentNode").selectedChildWidget.id =="queueContentNode";
 		};
-		
-		this.inQueue = function(movieId, queue){
-			return dojo.some(queue ? [queue] : lists, function(list){
-				if(this[list] && list!="historyList" && list!="watchedList"){ 
+
+		this.inQueue = function(/* String */movieId, /* String? */queue){
+			//	summary:
+			//		Check to see that a movie is queued.
+			//	movieId:
+			//		The guid of the Netflix title to check.
+			//	queue:
+			//		Optional queue to check ("queue", "instant", "history",
+			//		"watched", "atHome", "saved"). If nothing is provided,
+			//		check all queues.
+			if(queue !== undefined){
+				if(queue.indexOf("List")==-1){
+					queue += "List";
+				}
+			}
+			var b = dojo.some(queue ? [queue] : lists, function(list){
+				if(this[list] && list!="historyList" && list!="watchedList"){
 					return this[list].inQueue(movieId);
 				 }
 			}, this);
+			return b;
 		};
-		
-		this.inQueueByTerm = function(term, queue){
+
+		this.inQueueByTerm = function(/* String */term, /* String? */queue){
+			//	summary:
+			//		Check to see that a movie is queued.
+			//	term:
+			//		The movie's title (such as comes in from the RSS feeds).
+			//	queue:
+			//		Optional queue to check ("queue", "instant", "history",
+			//		"watched", "atHome", "saved"). If nothing is provided,
+			//		check all queues.
+			if(queue !== undefined){
+				if(queue.indexOf("List")==-1){
+					queue += "List";
+				}
+			}
 			var test = dojo.some(queue ? [queue]: lists, function(list){
 				if(this[list] && list!="historyList" && list!="watchedList"){
 					return this[list].inQueueByTerm(term);
@@ -4982,18 +5294,21 @@ dojo.provide("qd.app.queue");
 				if(this[list]){ this[list].destroy(); }
 			}, this);
 		};
-		
+
 		dojo.connect(qd.app, "deauthorize", dojo.hitch(this, function(){
 			this.clearCache();
 		}));
 
 		this.gotoInitialPage = function(){
-			//console.log("gotoInitialPage...")
-			this.gotoMyQueueDvd(true);
+			//	summary: Switch to the starting page (Your Queue => DVD)
+			this.gotoMyQueueDvd();
 		};
 
-		this.switchPage = function(page){ 
-			//console.log("go to queue page:", page)
+		this.switchPage = function(/* String */page){
+			//	summary:
+			//		Switch to the give sub-page of Your Queue.
+			//	page:
+			//		"dvd" (the default), "instant", "history", "notLoggedIn"
 			if(page == "dvd"){
 				this.gotoMyQueueDvd();
 			}
@@ -5011,7 +5326,12 @@ dojo.provide("qd.app.queue");
 			}
 		};
 
-		function changePageDisplay(page){
+		function changePageDisplay(/* String */page){
+			//	summary:
+			//		Helper function for the goto* functions, to toggle navigation and
+			//		content elements' styles.
+			//	page:
+			//		"dvd", "instant", "history"
 			if (page == "dvd") {
 				qd.app.switchPage("yourQueue");
 				qd.app.selectNav("myQueueDvd", "queSubNav");
@@ -5032,23 +5352,28 @@ dojo.provide("qd.app.queue");
 			}
 		};
 
-		this.addMovieById = function(/* String */movieId, target, /* String */queue){
-			// summary:
+		this.addMovieById = function(/* String */movieId, /* Node */target, /* String */queue){
+			//	summary:
 			//		Adds a movie to your queue
 			//	description:
 			//		After cliking Add Movie in one of the areas
 			//		of the app, the movieId is sent here. The actual
 			//		item is retrieved (somehow) and the data is sent
 			//		to NetFlix.
-			console.info("CLICK ADD:", movieId);
+			//	movieId:
+			//		Netflix title guid.
+			//	target:
+			//		DOM node representing the item.
+			//	queue:
+			//		"queue" (default), "instant"
 			if(qd.app.authorized) {
 				var queue = queue || "queue";
 				if(target) {
 					dojo.addClass(target, "inQueue")
 				}
 				if(this.inQueue(movieId, queue)) {
-					this.switchPage("queue");
-					this.queueList.highlight(movieId);
+					this.switchPage(queue);
+					this[(queue=="instant")?"instantList":"queueList"].highlight(movieId);
 				} else {
 					var movie = qd.services.item(movieId);
 					if(movie){
@@ -5056,18 +5381,15 @@ dojo.provide("qd.app.queue");
 							if(movie.screenFormats.length){
 								if(queue == "instant"){
 									if("instant" in movie.formats){
-										console.log("Adding to instant queue...");
 										this.instantList.addMovie(movie);
 									}else{
 										console.warn("Attempted to add a movie to the instant queue, but it doesn't seem to be available for instant watching. Movie: " + movie.title + ", " + (movie.guid || "(no GUID)"));
 									}
 								}else{
-									console.log("Adding to DVD queue...")
 									this.queueList.addMovie(movie);
 								}
 							} else {
-								console.log("No screen formats. Assuming this is not released and adding to saved. len:", movie.screenFormats.length, "scrFor:", movie.screenFormats)
-								this.savedList.addMovie(movie);	
+								this.savedList.addMovie(movie);
 							}
 						} else {
 							qd.service.queues.addMovieById(movieId, target, queue);
@@ -5086,14 +5408,24 @@ dojo.provide("qd.app.queue");
 			}
 		};
 
-		this.addMovieByTerm = function(/* String */term, target, /* String */queue){
+		this.addMovieByTerm = function(/* String */term, /* Node */target, /* String */queue){
 			//	summary:
 			//		This is here because we do not get guids with the RSS feeds; so
 			//		what we do is fetch the title, and the run addMovieById.
+			//	term:
+			//		Netflix title's title.
+			//	target:
+			//		DOM node representing the item.
+			//	queue:
+			//		"queue" (default), "instant"
 			if(this.inQueueByTerm(term, queue)){
 				var id = qd.services.itemByTerm(term).guid;
-				this.switchPage("queue");
-				this.queueList.highlight(id);
+				// figure out which queue it is.
+				if(queue === undefined){
+					queue = this.instantList.inQueue(id) ? "instant" : "queue";
+				}
+				this.switchPage(queue);
+				this[(queue=="instant")?"instantList":"queueList"].highlight(id);
 			} else {
 				if(qd.services.network.available){
 					qd.service.titles.fetch({
@@ -5116,14 +5448,19 @@ dojo.provide("qd.app.queue");
 			}
 		};
 
-		function setNumInNav(divId, num){
+		function setNumInNav(/* String */divId, /* Number */num){
+			//	summary:
+			//		Helper method to set the item count in navigation sub tabs
+			//	divId:
+			//		DOM node ID of the tab's label.
+			//	num:
+			//		Count to display.
 			dojo.byId(divId).innerHTML = num ? "("+num+")" : "";
 		}
-		
+
 		this.getRatings = function(items, callback){
-			// summary:
+			//	summary:
 			//		Get ratings (user, predicted, average) for a list of objects
-			//
 			//	items: Array
 			//		An array of items. Not widgets, but objects returned from NetFlix.
 			//	callback: Function
@@ -5137,9 +5474,11 @@ dojo.provide("qd.app.queue");
 				result: callback
 			});
 		};
-		
+
 		// atHome, discs, instant, watched, shipped, returned
-		this.gotoMyQueueDvd = function(initialPage){
+		this.gotoMyQueueDvd = function(){
+			//	summary:
+			//		Navigate to the DVD tab in Your Queue
 			if(!qd.app.authorized){
 				qd.app.switchPage("auth");
 				return;
@@ -5151,12 +5490,12 @@ dojo.provide("qd.app.queue");
 
 			//	TODO: figure out if this would ever be loaded in the background.
 			qd.app.underlay.show();
-			
+
 			var res = [];
 			qd.service.queues.atHome().addCallback(this, function(arr){
 				res = res.concat(arr.slice(0));
 				this.atHomeList = new qd.app.queueList({
-					result: { items: arr }, 
+					result: { items: arr },
 					type: "at_home"
 				}, "queueAtHomeTemplateNode");
 				setNumInNav("numInQueueTotal", arr.length);
@@ -5166,8 +5505,8 @@ dojo.provide("qd.app.queue");
 				qd.service.queues.discs().addCallback(this, function(arr){
 					res = res.concat(arr.slice(0));
 					this.queueList = new qd.app.queueList({
-						result: { items: arr }, 
-						type:"queue", 
+						result: { items: arr },
+						type:"queue",
 						canDrag:true
 					}, "queueTemplateNode");
 					setNumInNav("numInQueueTotal", res.length);
@@ -5176,14 +5515,14 @@ dojo.provide("qd.app.queue");
 
 					qd.service.queues.saved().addCallback(this, function(arr){
 						this.savedList = new qd.app.queueList({
-							result: { items: arr }, 
+							result: { items: arr },
 							type:"saved"
 						}, "savedQueueTemplateNode");
 						setNumInNav("numInSavedQueued", arr.length);
 						qd.service.queues.cache(this.savedList.type, this.savedList.list);
-						
+
 						this.onAllLoaded();
-						
+
 						var guids = dojo.map(res, function(m){
 							return m.title.guid;
 						});
@@ -5200,7 +5539,7 @@ dojo.provide("qd.app.queue");
 						}).addErrback(this, function(err){
 							console.error("ratings fetch error::", err);
 						}).addCallback(this, "gotoMyQueueInstant", true);
-							
+
 						pageCached["dvd"] = true;
 						qd.app.underlay.hide();
 					});
@@ -5220,7 +5559,13 @@ dojo.provide("qd.app.queue");
 			});
 		};
 
-		this.gotoMyQueueInstant = function(inBackground){
+		this.gotoMyQueueInstant = function(/* Boolean */inBackground){
+			//	summary:
+			//		Navigate to the Instant tab in Your Queue
+			//	inBackground:
+			//		Pass true to skip changing the display (useful for
+			//		loading the contents of the Instant queue but not
+			//		actually navigating to the tab).
 			if(!inBackground && pageCached["instant"]){
 				changePageDisplay("instant");
 				return;
@@ -5236,7 +5581,7 @@ dojo.provide("qd.app.queue");
 			qd.service.queues.watched().addCallback(this, function(arr){
 				res = res.concat(arr.slice(0));
 				this.watchedList = new qd.app.queueList({
-					result: { items: arr }, 
+					result: { items: arr },
 					type: "watched"
 				}, "instantWatchedTemplateNode");
 				qd.service.queues.cache(this.watchedList.type, this.watchedList.list);
@@ -5244,14 +5589,14 @@ dojo.provide("qd.app.queue");
 				qd.service.queues.instant().addCallback(this, function(arr){
 					res = res.concat(arr.slice(0));
 					this.instantList = new qd.app.queueList({
-						result: { items: arr }, 
-						type: "instant", 
+						result: { items: arr },
+						type: "instant",
 						canDrag: true
 					}, "instantQueuedTemplateNode");
 					setNumInNav("numInInstantTotal", arr.length);
 					setNumInNav("numInInstantQueued", arr.length);
 					qd.service.queues.cache("instant", this.instantList.list);
-					
+
 					var guids = dojo.map(res, function(m){
 						return m.title.guid;
 					});
@@ -5301,6 +5646,12 @@ dojo.provide("qd.app.queue");
 		};
 
 		this.gotoMyQueueHistory = function(inBackground){
+			//	summary:
+			//		Navigate to the History tab in Your Queue
+			//	inBackground:
+			//		Pass true to skip changing the display (useful for
+			//		loading the contents of the History queue but not
+			//		actually navigating to the tab).
 			if(!inBackground && pageCached["history"]){
 				changePageDisplay("history");
 				return;
@@ -5317,25 +5668,25 @@ dojo.provide("qd.app.queue");
 			qd.service.queues.returned().addCallback(this, function(ret){
 				qd.service.queues.shipped().addCallback(this, function(shp){
 					dojo.forEach(ret, function(m){
-						var found = dojo.some(shp, function(mm){	
+						var found = dojo.some(shp, function(mm){
 							if(mm.title.guid == m.title.guid){
 								m.shipped = mm.shipped;
 								return true; 		//break loop
 							}
 						});
 					});
-				
+
 					this.historyList = new qd.app.queueList({
-						result: { items: ret }, 
+						result: { items: ret },
 						type: "history"
 					}, "historyTemplateNode");
 					setNumInNav("numInHistoryTotal", ret.length);
 					setNumInNav("numInHistoryQueued", ret.length);
 					qd.service.queues.cache(this.historyList.type, this.historyList.list);
-					
+
 					pageCached["history"] = true;
 					if(!inBackground){
-						changePageDisplay("history");	
+						changePageDisplay("history");
 						qd.app.underlay.hide();
 					} else {
 						qd.app.loadingIcon.hide();
@@ -5387,7 +5738,7 @@ dojo.provide("qd.app.queue");
 			});
 		}
 	})();
-	
+
 	function setupNavigation(){
 		dojo.behavior.add({
 			"#bigNavYourQueue a": {
@@ -5422,17 +5773,23 @@ dojo.provide("qd.app.queue");
 })();
 
 
+// stuff to periodically poll the API for changes
 qd.app.queue.polling = new (function(){
-	var pollTime = 5 * 3600;
-	var isPolling = false;
-	var pollInterval;
-	var initialized = false;
-	
+	var pollTime = 5 * 3600,
+	    isPolling = false,
+	    pollInterval,
+	    initialized = false;
+
 	this.devS = false;
 	this.devR = false;
 	this.devSR = false;
-	
+
 	this.initialized = function(/* Boolean? */val){
+		//	summary:
+		//		Is the polling system initialized? With no args, acts as a getter;
+		//		with the val arg, acts as a setter.
+		//	val:
+		//		Value to which to set the initialized status.
 		if(val !== undefined){
 			initialized = val;
 		}
@@ -5440,24 +5797,26 @@ qd.app.queue.polling = new (function(){
 	};
 
 	this.init = function(){
-		//console.warn("Start Polling?", dojo.attr(dojo.byId("receiveNotifications"), "checked"))
+		//	summary: Initialize the queue polling system.
 		if(initialized || dojo.attr(dojo.byId("receiveNotifications"), "checked") == false){ return; }
-		console.info("Start Queue Polling")
 		initialized = true;
-		
+
 		var u = qd.app.user();
 		u.atHomeItems = null;
-		qd.app.user(u); 
+		qd.app.user(u);
 
 		this.checkQueues(qd.app.queue.atHomeList.result.items, null);
 		this.checkUpdates();
 	};
-	
+
 	this.dev = function(onOff){
+		//	summary: Development helper method to force checking for updates.
 		setTimeout(dojo.hitch(this, "checkUpdates"), pollTime);
 	};
-	
-	this.checkUpdates = function(type){
+
+	this.checkUpdates = function(){
+		//	summary:
+		//		Check for updates to the At Home queue.
 		qd.service.queues.atHome().addCallback( this, function(res){
 			var athome = res;
 			if(this.devS || this.devR || this.devSR){
@@ -5467,23 +5826,20 @@ qd.app.queue.polling = new (function(){
 			setTimeout(dojo.hitch(this, "checkUpdates"), pollTime);
 		});
 	};
-	
+
 	this.checkQueues = function(/*Array*/athome){
-		//console.info("...Checking queues...")
-		
+		//	summary:
+		//		Compare locally stored queue items with what the Netflix API reports.
+		//	athome:
+		//		Array of items we think are currently At Home.
 		var shipped = [];
 		var returned = [];
 		var u = qd.app.user();
 		var found = false;
-		
-		//console.log("user atHomeItems:", u, u.atHomeItems)
-		//console.log("athome:", athome);
 
 		if(!u.atHomeItems || !u.atHomeItems.length){
-			//console.log(" - - add to user obj - -")
 			u.atHomeItems = athome;
 			qd.app.save(u);
-			//console.info("At Home items added to user object.")
 			return;
 		}
 
@@ -5491,7 +5847,6 @@ qd.app.queue.polling = new (function(){
 			found = false;
 			dojo.forEach(u.atHomeItems, function(m){
 				if(m.guid == ah.guid){
-				//	console.log("   compare::", m.shipped, ah.shipped)
 					if(m.shipped != ah.shipped){
 						shipped.push(ah);
 					}
@@ -5500,32 +5855,27 @@ qd.app.queue.polling = new (function(){
 					}
 					found = true;
 				}
-			});	
+			});
 			if(!found){
 				// added, shipped
 				shipped.push(ah);
 			}
 		});
-		
+
 		if(shipped.length && returned.length){
-			console.log("changes to shipped and receieved", shipped, returned);
 			qd.app.systray.showShippedAndReceived(shipped, returned);
 
 		}else if(shipped.length){
-			console.log("changes to shipped:", shipped)
 			qd.app.systray.showShipped(shipped);
-		
+
 		}else if(returned.length){
-			console.log("changes to receieved:", returned)
 			qd.app.systray.showReceived(returned);
-		
+
 		}else{
-			//console.log("No new notifications.");
 		}
-		
+
 		if (shipped.length || returned.length) {
-			//console.log("Rebuild page to see changes")
-			// flush user object's 
+			// flush user object's
 			// atHomeItems and let it repopulate
 			// after refresh
 			u.atHomeItems = null;
@@ -5537,31 +5887,31 @@ qd.app.queue.polling = new (function(){
 			qd.app.queue.gotoMyQueueDvd();
 		}
 	};
-	
-	this.doDevCode = function(athome, myqueue){
-		// dev change dates to force update
-		console.info(" - - doing dev code - - ")
-		
+
+	this.doDevCode = function(/* Array */athome, /* Array */myqueue){
+		//	summary:
+		//		Development helper to change dates and thus force an update.
+
 		var d = new Date()
 		var today = dojo.date.locale.format(d, {selector:"date", datePattern:"MM/dd/yy"});
 		d.setDate(d.getDate()+2);
-		var tommorrow = dojo.date.locale.format(d, {selector:"date", datePattern:"MM/dd/yy"});				
-		
+		var tommorrow = dojo.date.locale.format(d, {selector:"date", datePattern:"MM/dd/yy"});
+
 		if (this.devR || this.devSR) {
 			var received = athome[athome.length - 1];
 			received.returned = today;
 		}
-		
+
 		if(this.devS || this.devSR){
 			var updated = myqueue.shift();
 			updated.shipped = today;
 			updated.estimatedArrival = tommorrow;
 			athome.push(updated);
 		}
-		
-		this.devS = this.devR = this.devSR = false;	
+
+		this.devS = this.devR = this.devSR = false;
 	};
-	
+
 })();
 
 
@@ -5615,6 +5965,9 @@ qd.app.topMovies = new (function(){
 	};
 	
 	this.togglePageElements = function(){
+		//	summary:
+		//		Show/hide certain elements of the content area according
+		//		to the current page.
 		var p = this.currentPage;
 		dojo.style("genrePicker", "display", p=="top25ByGenre"?"inline":"none");
 		dojo.style("top100Title", "display", p=="top100"?"block":"none");
@@ -5625,6 +5978,8 @@ qd.app.topMovies = new (function(){
 	}
 
 	this.checkForRefresh = function(){
+		//	summary:
+		//		Make sure we are allowed to see the area requested.
 		this.togglePageElements();
 		if(this.loggedIn === undefined){
 			return;
@@ -5926,6 +6281,33 @@ qd.app.ratings = new (function(){
 		dojo.behavior.apply();
 	};
 
+	function rebuildRatingWidgets(/* String */titleGuid){
+		//	summary:
+		//		Rebuilt star rating widget(s) for the title having the guid provided.
+		//	titleGuid:
+		//		The guid of the Netflix title in question.
+		var qar = qd.app.ratings;
+		dojo.query("[movie]").forEach(function(movieNode){
+			// This function can just shortcut item fetches and go straight to the
+			// qd.services.item() function because by definition, ratings widgets
+			// only exist when an item has been fetched.
+			var movieId = dojo.attr(movieNode, "movie");
+			if(movieId.indexOf("http://") != 0){ return; } // skip feed entries
+			if(movieId.indexOf("queues")>-1 || movieId.indexOf("rental_history")>-1 || movieId.indexOf("at_home")>-1){
+				movieId = qd.services.item(movieId).title.guid;
+			}
+			var item = qd.services.item(movieId);
+			if(item.guid == titleGuid){
+				dojo.query(".starRating", movieNode).forEach(function(starRatingNode){
+					var type = item.ratings.user ? "user" : "predicted",
+						rating = type=="user" ? item.ratings.user : item.ratings.predicted;
+					qar.buildRatingWidget(starRatingNode, type, rating);
+				});
+			}
+		});
+		qar.activateRatingWidgets();
+	}
+
 	function disableRatings(){
 		ratingIsDisabled = true;
 	}
@@ -5981,6 +6363,8 @@ qd.app.ratings = new (function(){
 				qd.service.titles.rate({
 					guid: movieId,
 					rating: rating
+				}).addCallback(function(){
+					rebuildRatingWidgets(movieId);
 				});
 			}
 		},
@@ -6242,7 +6626,7 @@ qd.app.movies = new (function(){
 				movie.allDirectors = dojo.map(movie.directors, function(d){ return d.title; }).join(", ");
 				populateDialog(movie);
 				dojo.query(".movie", infoTemplate.getRootNode()).forEach(dojo.hitch(this, function(n){
-					this.setupMovieId(n, movieId);
+					this.setupMovieId(n, movie.guid);
 				}));
 				var ratingType = (movie.ratings.user>0) ? "user"
 				           : ((movie.ratings.predicted>0) ? "predicted"
@@ -6278,9 +6662,15 @@ qd.app.movies = new (function(){
 	});
 
 	function disableInfoDialog(){
+		//	summary:
+		//		Disable showing the info dialog if the app attempts to do
+		//		so (e.g., during a drag event).
 		dialogIsDisabled = true;
 	}
 	function enableInfoDialog(){
+		//	summary:
+		//		Enable showing the info dialog if the app attempts to do so.
+
 		// Janky timer! Give it a brief moment to try and pass
 		// any click events through to nodes that might trigger
 		// the dialog, THEN reenable it.
@@ -6289,15 +6679,35 @@ qd.app.movies = new (function(){
 		}, 150);
 	}
 
+	// connect to this to listen for items being added to the queue from the info dialog
+	this.onTitleAddedFromDialog = function(){};
+
 	var movieInfoHandler = {
 		onclick: dojo.hitch(this, function(evt){
-			var movieId = this.getMovieIdByNode(evt.target);
+			var movieId = null,
+			    movieNode = evt.target;
+			while(!movieId){
+				movieNode = movieNode.parentNode;
+				movieId = dojo.attr(movieNode, "movie");
+			}
 			if(movieId){
+				// change the Add/In Q button state if the item gets added
+				// while the dialog is open
+				var __h = dojo.connect(this, "onTitleAddedFromDialog", function(){
+					dojo.disconnect(__h);
+					dojo.query(".addButton", movieNode).forEach(function(n){
+						var queue = dojo.hasClass(n, "instant") ? "instantList" : "queueList",
+						    isQueued = qd.app.queue.inQueue(dojo.attr(movieNode, "movie"), queue);
+						dojo.addClass(n, "inQueue");
+					});
+				});
+
+				// show the dialog
 				this.showInfo(movieId);
 			}
 		})
 	};
-	
+
 	var movieAddHandler = {
 		onclick: function(evt){
 			var movieId = qd.app.movies.getMovieIdByNode(evt.target);
@@ -6312,7 +6722,7 @@ qd.app.movies = new (function(){
 	};
 	
 	var movieDialogAddHandler = {
-		onclick: function(evt){
+		onclick: dojo.hitch(this, function(evt){
 			var movieId = qd.app.movies.getMovieIdByNode(evt.target);
 			if(movieId){
 				dijit.byId("movieInfoDialogNode").hide();
@@ -6322,9 +6732,11 @@ qd.app.movies = new (function(){
 				} else {
 					qd.app.queue.addMovieByTerm(movieId, evt.target, queue);
 				}
+				this.onTitleAddedFromDialog();
 			}
-		}
+		})
 	};
+	
 	dojo.behavior.add({
 		// Public feed results interactions
 		"#artworkList .movie span.title": movieInfoHandler,
@@ -6353,11 +6765,13 @@ dojo.provide("qd.app.preferences");
 (function(){
 	
 	function handleExternalLink(evt){
+		//	summary: Open a link in the system browser.
 		air.navigateToURL(new air.URLRequest(evt.target.href));
 		return false;
 	}
 	
 	function onClickRunBackground(/*Event*/evt){
+		//	summary: Toggle "run in background" mode.
 		var checkbox = evt.target;
 		console.log(dojo.attr(checkbox, "checked"));
 		var u = qd.app.user();
@@ -6368,6 +6782,7 @@ dojo.provide("qd.app.preferences");
 	}
 	
 	function onClickReceiveNotifications(/*Event*/evt){
+		//	summary: Toggle receiving of notifications.
 		var checkbox = evt.target;
 		console.log(dojo.attr(checkbox, "checked"));
 		var u = qd.app.user();
@@ -6378,6 +6793,8 @@ dojo.provide("qd.app.preferences");
 	}
 
 	function init(){
+		//	summary: Startup code for the Preferences system.
+
 		// first, make links in the Preferences pane open in the system default
 		// browser; we can't use dojo.behavior for this because we need to
 		// override the actual onclick handler (so we can make it return false)
@@ -6385,6 +6802,13 @@ dojo.provide("qd.app.preferences");
 		dojo.query("a.extern", dojo.byId("prefsContainerNode")).forEach(function(n){
 			n.onclick = handleExternalLink;
 		});
+
+		dojo.query(".prefsAbout .prefsTitle").connect("onclick", function(evt){
+			if(evt.shiftKey){
+				air.navigateToURL(new air.URLRequest("http://www.youtube.com/watch?v=gWOzUzJd6wM"));
+			}
+		});
+
 		// next, behavior setup(s)
 		dojo.behavior.add({
 			"#deauth": {
@@ -6426,11 +6850,11 @@ dojo.provide("qd.app.preferences");
 			}
 		});
 		dojo.behavior.apply();
-		
+
 		// set checkboxes according to user prefs
 		var u = qd.app.user(),
-			receiveNotifications = u && u.receiveNotifications !== undefined && u.receiveNotifications || false,
-			runInBackground = u && u.runInBackground !== undefined && u.runInBackground || false;
+		    receiveNotifications = u && u.receiveNotifications !== undefined && u.receiveNotifications || false,
+		    runInBackground = u && u.runInBackground !== undefined && u.runInBackground || false;
 		dojo.attr(dojo.byId("receiveNotifications"), "checked", receiveNotifications);
 		dojo.attr(dojo.byId("runInBackground"), "checked", runInBackground);
 	}
@@ -6811,6 +7235,13 @@ qd.app.resultsList = new (function(){
 			});
 		});
 
+		// funny bug: sometimes when repeating a search or fetching recommendations
+		// twice in a row, our box art loses its src
+		var qs = qd.services;
+		dojo.query("#searchResults img[src=]").forEach(function(n){
+			dojo.attr(n, "src", qs.item(qam.getMovieIdByNode(n)).art.large);
+		});
+
 		qd.app.underlay.hide();
 
 		// build & activate any pending rating widgets
@@ -6818,7 +7249,7 @@ qd.app.resultsList = new (function(){
 			guids: guids,
 			result: function(data){
 				dojo.forEach(data, function(item){
-					var nl = dojo.query("div[movie='" + item.guid + "'] .starRating", dojo.byId("searchResultsList")); 
+					var nl = dojo.query("div[movie='" + item.guid + "'] .starRating", dojo.byId("searchResultsList"));
 					if(nl){
 						//	should be unique.
 						var rating = 3, type = "average";
@@ -7175,6 +7606,7 @@ dojo.provide("qd.app.systray");
 		}); //Object
 	};
 	var buildWin = function(){
+		//	summary: Build the mini At Home queue window.
 		var v = getViewport();
 		var w = popWidth;
 		var mr = 0;
@@ -7195,6 +7627,7 @@ dojo.provide("qd.app.systray");
 	};
 	
 	var getItems = function(/*String*/type){
+		//	summary: Pull in the notifications or the At Home items.
 		if (type) {
 			return qd.app.queue.getNotifications(type);
 		} else { 
@@ -7233,7 +7666,7 @@ dojo.provide("qd.app.systray");
 			}
 			
 			di.setIcon(qIcon);
-			
+
 			this.setMenu();
 			this._doConnect();
 			//this.win = buildWin();
@@ -7274,6 +7707,7 @@ dojo.provide("qd.app.systray");
 		};
 
 		this.showMini = function(){
+			//	summary: Open the mini At Home window.
 			if(!this.winshowing && this.nativeWindow){
 				this.nativeWindow.animate("open");
 				this.winshowing = true;
@@ -7306,24 +7740,28 @@ dojo.provide("qd.app.systray");
 		}
 		
 		this.showAtHome = function(){
+			//	summary: Show the At Home queue.
 			if(!this.isReady()){ return false; }
 			this.miniDisplaying = "atHome";
 			this.nativeWindow.atHome(getItems());
 			this.showMini();
 		};
 		this.showShipped = function(/*Array*/shipped){
+			//	summary: Show shipped titles.
 			if(!this.isReady()){ return; }
 			this.miniDisplaying = "shipped";
 			this.nativeWindow.shipped(shipped || getItems("shipped"));
 			this.showMini();
 		};
 		this.showReceived = function(/*Array*/receieved){
+			//	summary: Show received titles.
 			if(!this.isReady()){ return; }
 			this.miniDisplaying = "receieved";
 			this.nativeWindow.received(receieved ||getItems("received"));
 			this.showMini();
 		};
 		this.showShippedAndReceived = function(/*Array*/shipped, /*Array*/receieved){
+			//	summary: Show both shipped and received titles.
 			console.log("systray.showShippedAndReceived", shipped, receieved)
 			if(!this.isReady()){ return; }
 			console.log("systray.showShippedAndReceived GO!", shipped, receieved)
@@ -7372,47 +7810,45 @@ dojo.provide("qd.app.systray");
 			//		Sets the right-click menu for the systray icon
 			//		Called multiple times, and changes menu according
 			//		to app state - like if the user is logged in.
-			//
-			if(this.wasLoggedIn === qd.app.authorized){ return; }
-			this.wasLoggedIn = qd.app.authorized;
-			
-			di.setMenu({
-				"At Home Mini-Queue": this.wasLoggedIn ? dojo.hitch(this, function(){
-					this.showAtHome();
-				}) : false,
-				"Your Queue": this.wasLoggedIn ? dojo.hitch(this, function(){
-					this.showApp();
-					qd.app.queue.switchPage("queue");
-				}) : false,
+			var items = {
 				"Top 100 Movies": dojo.hitch(this, function(){
 					this.showApp();
 					qd.app.switchPage("topMovies");
 					qd.app.selectNav("", "topMoviesSubNav");
 				}),
-				"Preferences": this.wasLoggedIn ? dojo.hitch(this, function(){
-					this.showApp();
-					qd.app.switchPage("preferences");
-				}) : false,	
 				"divider":true,
-				/*
-				"Hide App (dev)": dojo.hitch(this, function(){
-					this.hideApp();
-				}),	
-				"Show Shipped (dev)": dojo.hitch(this, function(){
-					this.devShipped();
-				}),	
-				"Show Received (dev)": dojo.hitch(this, function(){
-					this.devReceived();
-				}),	
-				"Show Shipped and Received (dev)": dojo.hitch(this, function(){
-					this.devShippedAndReceived();
-				}),
-				*/		
 				"Quit Queued": dojo.hitch(this, function(){
 					this.allowExit = true;
 					qd.app.exit();
 				})
-			});
+			};
+
+			if(qd.app.authorized){
+				items = {
+					"At Home Mini-Queue": dojo.hitch(this, function(){
+						this.showAtHome();
+					}),
+					"Your Queue": dojo.hitch(this, function(){
+						this.showApp();
+						qd.app.queue.switchPage("queue");
+					}),
+					"Top 100 Movies": dojo.hitch(this, function(){
+						this.showApp();
+						qd.app.switchPage("topMovies");
+						qd.app.selectNav("", "topMoviesSubNav");
+					}),
+					"Preferences": dojo.hitch(this, function(){
+						this.showApp();
+						qd.app.switchPage("preferences");
+					}),	
+					"divider":true,
+					"Quit Queued": dojo.hitch(this, function(){
+						this.allowExit = true;
+						qd.app.exit();
+					})
+				};
+			}
+			di.setMenu(items);
 		};
 		
 		this._doConnect = function(){
@@ -7466,6 +7902,13 @@ dojo.provide("qd.app.systray");
 			dojo.connect(qd.app.queue, "onChange", this, "onListChange");
 		};
 
+		//	connect the menu setting with authorization.
+		dojo.connect(qd.app, "authorize", dojo.hitch(this, function(){
+			this.setMenu();
+		}));
+		dojo.connect(qd.app, "deauthorize", dojo.hitch(this, function(){
+			this.setMenu();
+		}));
 	})();
 	
 	var doLoad = function (){
@@ -7722,6 +8165,8 @@ qd.app.tooltip = new (function(){
 	}
 
 	function tooltipIsDisabled(){
+		//	summary:
+		//		Returns true if the tooltip is disabled, else false.
 		return qd.app.isDragging();
 	}
 
@@ -7782,6 +8227,8 @@ qd.app.sync = new (function(){
 	var progress=0, nActions=0, current=0;
 
 	function closeDialog(){
+		//	summary:
+		//		Hide the sync confirmation dialog.
 		dijit.byId("syncConfirmDialogNode").hide();
 	}
 
@@ -7855,6 +8302,8 @@ qd.app.sync = new (function(){
 	};
 
 	this.closeDialog = function(){
+		//	summary:
+		//		Function to expose the internal closeDialog() function as a public member of qd.app.sync.
 		closeDialog();
 	};
 
@@ -7969,9 +8418,11 @@ qd.init = qd.init || {};
 (function(){
 	//	setup the services getter
 	qd.__defineGetter__("service", function(){
+		//	summary:
+		//		Return the proper service (qd.services.online, qd.services.offline)
+		//		based on the current network status.
 		var b = qd.services.network.available;
-	//	console.warn("-----> Using the " + (b ? "online" : "offline") + " service.");
-		return b ? qd.services.online : qd.services.offline;
+		return b ? qd.services.online : qd.services.offline;	//	Object
 	});
 	dojo.addOnLoad(qd.services.init);
 
