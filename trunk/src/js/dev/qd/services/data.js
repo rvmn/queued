@@ -1,6 +1,11 @@
 dojo.provide("qd.services.data");
 
 qd.services.data = new (function(){
+	//	summary:
+	//		A singleton object that handles any interaction with the
+	//		encrypted database.
+	//	database: String
+	//		The filename of the database.
 	this._testKey = "h1dd3n!!11one1";
 	this._testDb = "queued-test.db";	//	revert to queued.db
 	var _key = this._testKey;
@@ -16,21 +21,31 @@ qd.services.data = new (function(){
 
 	//	Properties
 	this.__defineGetter__("initialized", function(){
-		return initialized;
+		//	summary:
+		//		Returns whether the engine is initialized.
+		return initialized;	//	Boolean
 	});
 
 	//	these can't be getters, unfortunately.
 	this.connection = function(/* Boolean? */async){
-		return (async ? asyncConn : syncConn);
+		//	summary:
+		//		Return the proper connection.
+		return (async ? asyncConn : syncConn);	//	air.SQLConnection
 	};
 	this.connected = function(/* Boolean? */async){
-		return (async ? asyncConn.connected : syncConn.connected );
+		//	summary:
+		//		Returns whether the appropriate connection is actually connected.
+		return (async ? asyncConn.connected : syncConn.connected );	//	Boolean
 	};
 	this.transacting = function(/* Boolean? */async){
-		return (async ? asyncConn.inTransaction : syncConn.inTransaction );
+		//	summary:
+		//		Return whether the appropriate connection is in the middle of a transaction.
+		return (async ? asyncConn.inTransaction : syncConn.inTransaction );	//	Boolean
 	};
 	this.lastId = function(/* Boolean? */async){
-		return (async ? asyncConn.lastInsertRowID : syncConn.lastInsertRowID );
+		//	summary:
+		//		Return the lastId of the appropriate connection (INSERT/REPLACE).
+		return (async ? asyncConn.lastInsertRowID : syncConn.lastInsertRowID );	//	mixed
 	};
 
 	function eventSetup(/* air.SQLConnection */conn){
@@ -52,7 +67,9 @@ qd.services.data = new (function(){
 		return conn;
 	}
 	
-	this.init = function(key, db, forceCreate){
+	this.init = function(/* String */key, /* String */db, /* Boolean? */forceCreate){
+		//	summary:
+		//		Initialize the Queued data service.
 		//	set up the key
 		var k = key||this._testKey;
 		if(typeof(k) == "string"){
@@ -99,10 +116,20 @@ qd.services.data = new (function(){
 		});
 	};
 
-	this.create = function(/* Object */kwArgs){
+	/*=====
+	qd.services.data.__CreateArgs = function(file, connection){
+		//	summary:
+		//		Optional keyword arguments object for the create method.
+		//	file: String?
+		//		The filename to be used for creating the db.
+		//	connection: air.SQLConnection?
+		//		The connection to be used for creating the db.  Defaults
+		//		to the synchronous connection.
+	}
+	=====*/
+	this.create = function(/* qd.services.data.__CreateArgs */kwArgs){
 		//	summary:
 		//		Create the database.
-		console.warn("Creating the database...");
 		inCreation = true;
 		var file = kwArgs && kwArgs.file || initFile,
 			conn = kwArgs && kwArgs.connection || syncConn;
@@ -220,6 +247,7 @@ qd.services.data = new (function(){
 	function query(/* qd.services.data.fetch.__Args */kwArgs, /* air.SQLStatement */s){
 		//	summary:
 		//		Inner function to communicate with the database.
+		
 		//	set up the deferred.
 		var dfd = new dojo.Deferred();
 
@@ -269,7 +297,8 @@ qd.services.data = new (function(){
 	this.fetch = function(/* qd.services.data.fetch.__Args */kwArgs){
 		//	summary:
 		//		Fetch (i.e. read) data out of the database.  Can be used for write operations
-		//		but is not recommended; use execute for write ops.
+		//		but is not recommended; use execute for write ops.  This method is hard-coded
+		//		to use the synchronous connection (i.e. thread-blocking).
 		if(!kwArgs.sql){
 			console.log("qd.services.data.fetch: no SQL passed. " + dojo.toJson(kwArgs));
 			return null;
@@ -285,7 +314,8 @@ qd.services.data = new (function(){
 	this.execute = function(/* qd.services.data.fetch.__Args */kwArgs){
 		//	summary:
 		//		Execute the passed SQL against the database.  Should be used
-		//		for write operations (INSERT, REPLACE, DELETE, UPDATE).
+		//		for write operations (INSERT, REPLACE, DELETE, UPDATE).  This
+		//		method is hard-coded to use the asynchronous connection.
 		if(!kwArgs.sql){
 			console.log("qd.services.data.execute: no SQL passed. " + dojo.toJson(kwArgs));
 			return null;
@@ -298,49 +328,34 @@ qd.services.data = new (function(){
 		return d;	//	dojo.Deferred
 	};
 
-	this.sql = function(/* String */sql){
-		//	summary:
-		//		Dev functionality to allow for arbitrary sql to be executed.
-		//		FIXME: remove this before release!
-		this.execute({
-			sql: sql,
-			result: function(data){
-				console.log(data);
-			},
-			error: function(err){
-				console.warn(err);
-			}
-		});
-	};
-
 	//	event stubs
-	this.onError = function(evt){ };
-	this.onOpen = function(evt){ };
-	this.onClose = function(evt){ };
+	this.onError = function(/* air.Event */evt){ };
+	this.onOpen = function(/* air.Event */evt){ };
+	this.onClose = function(/* air.Event */evt){ };
 
 	//	analysis & maintenance
-	this.onAnalyze = function(evt){ };
-	this.onDeanalyze = function(evt){ };
-	this.onCompact = function(evt){ };
+	this.onAnalyze = function(/* air.Event */evt){ };
+	this.onDeanalyze = function(/* air.Event */evt){ };
+	this.onCompact = function(/* air.Event */evt){ };
 	this.onInitialize = function(){ };
 	this.onCreate = function(){ 
 		inCreation = false;
 	};
 
 	//	adding other database files
-	this.onAttach = function(evt){ };
-	this.onDetach = function(evt){ };
+	this.onAttach = function(/* air.Event */evt){ };
+	this.onDetach = function(/* air.Event */evt){ };
 
 	//	transactions
-	this.onBegin = function(evt){ };
-	this.onCommit = function(evt){ };
-	this.onRollback = function(evt){ };
+	this.onBegin = function(/* air.Event */evt){ };
+	this.onCommit = function(/* air.Event */evt){ };
+	this.onRollback = function(/* air.Event */evt){ };
 
 	//	SQL execution
-	this.onFetch = function(kwArgs){ };
-	this.onExecute = function(kwArgs){ };
-	this.onCancel = function(evt){ };
-	this.onInsert = function(evt){ };
-	this.onUpdate = function(evt){ };
-	this.onDelete = function(evt){ };
+	this.onFetch = function(/* qd.services.data.fetch.__Args */kwArgs){ };
+	this.onExecute = function(/* qd.services.data.fetch.__Args */kwArgs){ };
+	this.onCancel = function(/* air.Event */evt){ };
+	this.onInsert = function(/* air.Event */evt){ };
+	this.onUpdate = function(/* air.Event */evt){ };
+	this.onDelete = function(/* air.Event */evt){ };
 })();

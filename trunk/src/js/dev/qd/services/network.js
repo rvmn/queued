@@ -4,6 +4,8 @@ dojo.provide("qd.services.network");
 	var monitor, monitorUrl="http://www.netflix.com";
 
 	qd.services.network = new (function(){
+		//	summary:
+		//		A singleton object for access to the network layer of Queued.
 		var self = this,
 			pollInterval = 2500;
 		var statusChange = function(e){

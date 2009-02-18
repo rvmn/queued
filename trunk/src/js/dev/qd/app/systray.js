@@ -23,6 +23,7 @@ dojo.require("dojo.fx.easing");
 		}); //Object
 	};
 	var buildWin = function(){
+		//	summary: Build the mini At Home queue window.
 		var v = getViewport();
 		var w = popWidth;
 		var mr = 0;
@@ -43,6 +44,7 @@ dojo.require("dojo.fx.easing");
 	};
 	
 	var getItems = function(/*String*/type){
+		//	summary: Pull in the notifications or the At Home items.
 		if (type) {
 			return qd.app.queue.getNotifications(type);
 		} else { 
@@ -81,7 +83,7 @@ dojo.require("dojo.fx.easing");
 			}
 			
 			di.setIcon(qIcon);
-			
+
 			this.setMenu();
 			this._doConnect();
 			//this.win = buildWin();
@@ -122,6 +124,7 @@ dojo.require("dojo.fx.easing");
 		};
 
 		this.showMini = function(){
+			//	summary: Open the mini At Home window.
 			if(!this.winshowing && this.nativeWindow){
 				this.nativeWindow.animate("open");
 				this.winshowing = true;
@@ -154,24 +157,28 @@ dojo.require("dojo.fx.easing");
 		}
 		
 		this.showAtHome = function(){
+			//	summary: Show the At Home queue.
 			if(!this.isReady()){ return false; }
 			this.miniDisplaying = "atHome";
 			this.nativeWindow.atHome(getItems());
 			this.showMini();
 		};
 		this.showShipped = function(/*Array*/shipped){
+			//	summary: Show shipped titles.
 			if(!this.isReady()){ return; }
 			this.miniDisplaying = "shipped";
 			this.nativeWindow.shipped(shipped || getItems("shipped"));
 			this.showMini();
 		};
 		this.showReceived = function(/*Array*/receieved){
+			//	summary: Show received titles.
 			if(!this.isReady()){ return; }
 			this.miniDisplaying = "receieved";
 			this.nativeWindow.received(receieved ||getItems("received"));
 			this.showMini();
 		};
 		this.showShippedAndReceived = function(/*Array*/shipped, /*Array*/receieved){
+			//	summary: Show both shipped and received titles.
 			console.log("systray.showShippedAndReceived", shipped, receieved)
 			if(!this.isReady()){ return; }
 			console.log("systray.showShippedAndReceived GO!", shipped, receieved)
@@ -220,47 +227,45 @@ dojo.require("dojo.fx.easing");
 			//		Sets the right-click menu for the systray icon
 			//		Called multiple times, and changes menu according
 			//		to app state - like if the user is logged in.
-			//
-			if(this.wasLoggedIn === qd.app.authorized){ return; }
-			this.wasLoggedIn = qd.app.authorized;
-			
-			di.setMenu({
-				"At Home Mini-Queue": this.wasLoggedIn ? dojo.hitch(this, function(){
-					this.showAtHome();
-				}) : false,
-				"Your Queue": this.wasLoggedIn ? dojo.hitch(this, function(){
-					this.showApp();
-					qd.app.queue.switchPage("queue");
-				}) : false,
+			var items = {
 				"Top 100 Movies": dojo.hitch(this, function(){
 					this.showApp();
 					qd.app.switchPage("topMovies");
 					qd.app.selectNav("", "topMoviesSubNav");
 				}),
-				"Preferences": this.wasLoggedIn ? dojo.hitch(this, function(){
-					this.showApp();
-					qd.app.switchPage("preferences");
-				}) : false,	
 				"divider":true,
-				/*
-				"Hide App (dev)": dojo.hitch(this, function(){
-					this.hideApp();
-				}),	
-				"Show Shipped (dev)": dojo.hitch(this, function(){
-					this.devShipped();
-				}),	
-				"Show Received (dev)": dojo.hitch(this, function(){
-					this.devReceived();
-				}),	
-				"Show Shipped and Received (dev)": dojo.hitch(this, function(){
-					this.devShippedAndReceived();
-				}),
-				*/		
 				"Quit Queued": dojo.hitch(this, function(){
 					this.allowExit = true;
 					qd.app.exit();
 				})
-			});
+			};
+
+			if(qd.app.authorized){
+				items = {
+					"At Home Mini-Queue": dojo.hitch(this, function(){
+						this.showAtHome();
+					}),
+					"Your Queue": dojo.hitch(this, function(){
+						this.showApp();
+						qd.app.queue.switchPage("queue");
+					}),
+					"Top 100 Movies": dojo.hitch(this, function(){
+						this.showApp();
+						qd.app.switchPage("topMovies");
+						qd.app.selectNav("", "topMoviesSubNav");
+					}),
+					"Preferences": dojo.hitch(this, function(){
+						this.showApp();
+						qd.app.switchPage("preferences");
+					}),	
+					"divider":true,
+					"Quit Queued": dojo.hitch(this, function(){
+						this.allowExit = true;
+						qd.app.exit();
+					})
+				};
+			}
+			di.setMenu(items);
 		};
 		
 		this._doConnect = function(){
@@ -314,6 +319,13 @@ dojo.require("dojo.fx.easing");
 			dojo.connect(qd.app.queue, "onChange", this, "onListChange");
 		};
 
+		//	connect the menu setting with authorization.
+		dojo.connect(qd.app, "authorize", dojo.hitch(this, function(){
+			this.setMenu();
+		}));
+		dojo.connect(qd.app, "deauthorize", dojo.hitch(this, function(){
+			this.setMenu();
+		}));
 	})();
 	
 	var doLoad = function (){

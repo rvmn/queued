@@ -4,26 +4,25 @@ dojo.require("dojo.behavior");
 dojo.require("dojo.date.locale");
 
 (function(){
-	
-	var _queueTemplate = null;
-	var _atHomeTemplate = null;
-	var _instantTemplate = null;
-	var _historyTemplate = null;
-	var _watchedTemplate = null;
-	var pageCached = {};
-	var lists = ["historyList", "watchedList", "instantList", "atHomeList", "queueList", "savedList"];
-	
+
+	var _queueTemplate = null,
+	    _atHomeTemplate = null,
+	    _instantTemplate = null,
+	    _historyTemplate = null,
+	    _watchedTemplate = null,
+	    pageCached = {},
+	    lists = ["historyList", "watchedList", "instantList", "atHomeList", "queueList", "savedList"];
+
 	qd.app.queue = new (function(){
 		this.onLoad = function(/*Object*/queueList){
 			// summary:
 			//		This fires on EVERY queueList that loads
 			//		check queueList.type to determine which
 		};
-		
+
 		this.onAllLoaded = function(){
 			// summary:
 			//		Fires after all queues are loaded
-			//console.log("ON ALL LOADED")
 			if(qd.services.network.available){
 				qd.app.queue.polling.init();
 			}
@@ -35,7 +34,7 @@ dojo.require("dojo.date.locale");
 				}
 			});
 		};
-		
+
 		this.onChange = function(/*Object*/queueList,/*String*/typeOfChange){
 			// summary:
 			//		This fires on EVERY queueList that changes
@@ -54,27 +53,55 @@ dojo.require("dojo.date.locale");
 
 		this.count = 1
 		this.getItems = function(whichList){
-			//console.log("qd.qpp.queue.getItems", whichList, this[whichList], this.atHomeList, "count:", this.count++)
+			//	summary: Returns the items contained in the given list.
 			if(this[whichList]){
 				return this[whichList].result.items;
 			}
 			return [];
 		};
-		
+
 		this.isProtectedPage = function(){
-			console.log("isProtectedPage:", dijit.byId("contentNode").selectedChildWidget.id);
+			//	summary: Returns true if the currently selected page should
+			//	be protected by auth.
 			return dijit.byId("contentNode").selectedChildWidget.id =="queueContentNode";
 		};
-		
-		this.inQueue = function(movieId, queue){
-			return dojo.some(queue ? [queue] : lists, function(list){
-				if(this[list] && list!="historyList" && list!="watchedList"){ 
+
+		this.inQueue = function(/* String */movieId, /* String? */queue){
+			//	summary:
+			//		Check to see that a movie is queued.
+			//	movieId:
+			//		The guid of the Netflix title to check.
+			//	queue:
+			//		Optional queue to check ("queue", "instant", "history",
+			//		"watched", "atHome", "saved"). If nothing is provided,
+			//		check all queues.
+			if(queue !== undefined){
+				if(queue.indexOf("List")==-1){
+					queue += "List";
+				}
+			}
+			var b = dojo.some(queue ? [queue] : lists, function(list){
+				if(this[list] && list!="historyList" && list!="watchedList"){
 					return this[list].inQueue(movieId);
 				 }
 			}, this);
+			return b;
 		};
-		
-		this.inQueueByTerm = function(term, queue){
+
+		this.inQueueByTerm = function(/* String */term, /* String? */queue){
+			//	summary:
+			//		Check to see that a movie is queued.
+			//	term:
+			//		The movie's title (such as comes in from the RSS feeds).
+			//	queue:
+			//		Optional queue to check ("queue", "instant", "history",
+			//		"watched", "atHome", "saved"). If nothing is provided,
+			//		check all queues.
+			if(queue !== undefined){
+				if(queue.indexOf("List")==-1){
+					queue += "List";
+				}
+			}
 			var test = dojo.some(queue ? [queue]: lists, function(list){
 				if(this[list] && list!="historyList" && list!="watchedList"){
 					return this[list].inQueueByTerm(term);
@@ -92,18 +119,21 @@ dojo.require("dojo.date.locale");
 				if(this[list]){ this[list].destroy(); }
 			}, this);
 		};
-		
+
 		dojo.connect(qd.app, "deauthorize", dojo.hitch(this, function(){
 			this.clearCache();
 		}));
 
 		this.gotoInitialPage = function(){
-			//console.log("gotoInitialPage...")
-			this.gotoMyQueueDvd(true);
+			//	summary: Switch to the starting page (Your Queue => DVD)
+			this.gotoMyQueueDvd();
 		};
 
-		this.switchPage = function(page){ 
-			//console.log("go to queue page:", page)
+		this.switchPage = function(/* String */page){
+			//	summary:
+			//		Switch to the give sub-page of Your Queue.
+			//	page:
+			//		"dvd" (the default), "instant", "history", "notLoggedIn"
 			if(page == "dvd"){
 				this.gotoMyQueueDvd();
 			}
@@ -121,7 +151,12 @@ dojo.require("dojo.date.locale");
 			}
 		};
 
-		function changePageDisplay(page){
+		function changePageDisplay(/* String */page){
+			//	summary:
+			//		Helper function for the goto* functions, to toggle navigation and
+			//		content elements' styles.
+			//	page:
+			//		"dvd", "instant", "history"
 			if (page == "dvd") {
 				qd.app.switchPage("yourQueue");
 				qd.app.selectNav("myQueueDvd", "queSubNav");
@@ -142,23 +177,28 @@ dojo.require("dojo.date.locale");
 			}
 		};
 
-		this.addMovieById = function(/* String */movieId, target, /* String */queue){
-			// summary:
+		this.addMovieById = function(/* String */movieId, /* Node */target, /* String */queue){
+			//	summary:
 			//		Adds a movie to your queue
 			//	description:
 			//		After cliking Add Movie in one of the areas
 			//		of the app, the movieId is sent here. The actual
 			//		item is retrieved (somehow) and the data is sent
 			//		to NetFlix.
-			console.info("CLICK ADD:", movieId);
+			//	movieId:
+			//		Netflix title guid.
+			//	target:
+			//		DOM node representing the item.
+			//	queue:
+			//		"queue" (default), "instant"
 			if(qd.app.authorized) {
 				var queue = queue || "queue";
 				if(target) {
 					dojo.addClass(target, "inQueue")
 				}
 				if(this.inQueue(movieId, queue)) {
-					this.switchPage("queue");
-					this.queueList.highlight(movieId);
+					this.switchPage(queue);
+					this[(queue=="instant")?"instantList":"queueList"].highlight(movieId);
 				} else {
 					var movie = qd.services.item(movieId);
 					if(movie){
@@ -166,18 +206,15 @@ dojo.require("dojo.date.locale");
 							if(movie.screenFormats.length){
 								if(queue == "instant"){
 									if("instant" in movie.formats){
-										console.log("Adding to instant queue...");
 										this.instantList.addMovie(movie);
 									}else{
 										console.warn("Attempted to add a movie to the instant queue, but it doesn't seem to be available for instant watching. Movie: " + movie.title + ", " + (movie.guid || "(no GUID)"));
 									}
 								}else{
-									console.log("Adding to DVD queue...")
 									this.queueList.addMovie(movie);
 								}
 							} else {
-								console.log("No screen formats. Assuming this is not released and adding to saved. len:", movie.screenFormats.length, "scrFor:", movie.screenFormats)
-								this.savedList.addMovie(movie);	
+								this.savedList.addMovie(movie);
 							}
 						} else {
 							qd.service.queues.addMovieById(movieId, target, queue);
@@ -196,14 +233,24 @@ dojo.require("dojo.date.locale");
 			}
 		};
 
-		this.addMovieByTerm = function(/* String */term, target, /* String */queue){
+		this.addMovieByTerm = function(/* String */term, /* Node */target, /* String */queue){
 			//	summary:
 			//		This is here because we do not get guids with the RSS feeds; so
 			//		what we do is fetch the title, and the run addMovieById.
+			//	term:
+			//		Netflix title's title.
+			//	target:
+			//		DOM node representing the item.
+			//	queue:
+			//		"queue" (default), "instant"
 			if(this.inQueueByTerm(term, queue)){
 				var id = qd.services.itemByTerm(term).guid;
-				this.switchPage("queue");
-				this.queueList.highlight(id);
+				// figure out which queue it is.
+				if(queue === undefined){
+					queue = this.instantList.inQueue(id) ? "instant" : "queue";
+				}
+				this.switchPage(queue);
+				this[(queue=="instant")?"instantList":"queueList"].highlight(id);
 			} else {
 				if(qd.services.network.available){
 					qd.service.titles.fetch({
@@ -226,14 +273,19 @@ dojo.require("dojo.date.locale");
 			}
 		};
 
-		function setNumInNav(divId, num){
+		function setNumInNav(/* String */divId, /* Number */num){
+			//	summary:
+			//		Helper method to set the item count in navigation sub tabs
+			//	divId:
+			//		DOM node ID of the tab's label.
+			//	num:
+			//		Count to display.
 			dojo.byId(divId).innerHTML = num ? "("+num+")" : "";
 		}
-		
+
 		this.getRatings = function(items, callback){
-			// summary:
+			//	summary:
 			//		Get ratings (user, predicted, average) for a list of objects
-			//
 			//	items: Array
 			//		An array of items. Not widgets, but objects returned from NetFlix.
 			//	callback: Function
@@ -247,9 +299,11 @@ dojo.require("dojo.date.locale");
 				result: callback
 			});
 		};
-		
+
 		// atHome, discs, instant, watched, shipped, returned
-		this.gotoMyQueueDvd = function(initialPage){
+		this.gotoMyQueueDvd = function(){
+			//	summary:
+			//		Navigate to the DVD tab in Your Queue
 			if(!qd.app.authorized){
 				qd.app.switchPage("auth");
 				return;
@@ -261,12 +315,12 @@ dojo.require("dojo.date.locale");
 
 			//	TODO: figure out if this would ever be loaded in the background.
 			qd.app.underlay.show();
-			
+
 			var res = [];
 			qd.service.queues.atHome().addCallback(this, function(arr){
 				res = res.concat(arr.slice(0));
 				this.atHomeList = new qd.app.queueList({
-					result: { items: arr }, 
+					result: { items: arr },
 					type: "at_home"
 				}, "queueAtHomeTemplateNode");
 				setNumInNav("numInQueueTotal", arr.length);
@@ -276,8 +330,8 @@ dojo.require("dojo.date.locale");
 				qd.service.queues.discs().addCallback(this, function(arr){
 					res = res.concat(arr.slice(0));
 					this.queueList = new qd.app.queueList({
-						result: { items: arr }, 
-						type:"queue", 
+						result: { items: arr },
+						type:"queue",
 						canDrag:true
 					}, "queueTemplateNode");
 					setNumInNav("numInQueueTotal", res.length);
@@ -286,14 +340,14 @@ dojo.require("dojo.date.locale");
 
 					qd.service.queues.saved().addCallback(this, function(arr){
 						this.savedList = new qd.app.queueList({
-							result: { items: arr }, 
+							result: { items: arr },
 							type:"saved"
 						}, "savedQueueTemplateNode");
 						setNumInNav("numInSavedQueued", arr.length);
 						qd.service.queues.cache(this.savedList.type, this.savedList.list);
-						
+
 						this.onAllLoaded();
-						
+
 						var guids = dojo.map(res, function(m){
 							return m.title.guid;
 						});
@@ -310,7 +364,7 @@ dojo.require("dojo.date.locale");
 						}).addErrback(this, function(err){
 							console.error("ratings fetch error::", err);
 						}).addCallback(this, "gotoMyQueueInstant", true);
-							
+
 						pageCached["dvd"] = true;
 						qd.app.underlay.hide();
 					});
@@ -330,7 +384,13 @@ dojo.require("dojo.date.locale");
 			});
 		};
 
-		this.gotoMyQueueInstant = function(inBackground){
+		this.gotoMyQueueInstant = function(/* Boolean */inBackground){
+			//	summary:
+			//		Navigate to the Instant tab in Your Queue
+			//	inBackground:
+			//		Pass true to skip changing the display (useful for
+			//		loading the contents of the Instant queue but not
+			//		actually navigating to the tab).
 			if(!inBackground && pageCached["instant"]){
 				changePageDisplay("instant");
 				return;
@@ -346,7 +406,7 @@ dojo.require("dojo.date.locale");
 			qd.service.queues.watched().addCallback(this, function(arr){
 				res = res.concat(arr.slice(0));
 				this.watchedList = new qd.app.queueList({
-					result: { items: arr }, 
+					result: { items: arr },
 					type: "watched"
 				}, "instantWatchedTemplateNode");
 				qd.service.queues.cache(this.watchedList.type, this.watchedList.list);
@@ -354,14 +414,14 @@ dojo.require("dojo.date.locale");
 				qd.service.queues.instant().addCallback(this, function(arr){
 					res = res.concat(arr.slice(0));
 					this.instantList = new qd.app.queueList({
-						result: { items: arr }, 
-						type: "instant", 
+						result: { items: arr },
+						type: "instant",
 						canDrag: true
 					}, "instantQueuedTemplateNode");
 					setNumInNav("numInInstantTotal", arr.length);
 					setNumInNav("numInInstantQueued", arr.length);
 					qd.service.queues.cache("instant", this.instantList.list);
-					
+
 					var guids = dojo.map(res, function(m){
 						return m.title.guid;
 					});
@@ -411,6 +471,12 @@ dojo.require("dojo.date.locale");
 		};
 
 		this.gotoMyQueueHistory = function(inBackground){
+			//	summary:
+			//		Navigate to the History tab in Your Queue
+			//	inBackground:
+			//		Pass true to skip changing the display (useful for
+			//		loading the contents of the History queue but not
+			//		actually navigating to the tab).
 			if(!inBackground && pageCached["history"]){
 				changePageDisplay("history");
 				return;
@@ -427,25 +493,25 @@ dojo.require("dojo.date.locale");
 			qd.service.queues.returned().addCallback(this, function(ret){
 				qd.service.queues.shipped().addCallback(this, function(shp){
 					dojo.forEach(ret, function(m){
-						var found = dojo.some(shp, function(mm){	
+						var found = dojo.some(shp, function(mm){
 							if(mm.title.guid == m.title.guid){
 								m.shipped = mm.shipped;
 								return true; 		//break loop
 							}
 						});
 					});
-				
+
 					this.historyList = new qd.app.queueList({
-						result: { items: ret }, 
+						result: { items: ret },
 						type: "history"
 					}, "historyTemplateNode");
 					setNumInNav("numInHistoryTotal", ret.length);
 					setNumInNav("numInHistoryQueued", ret.length);
 					qd.service.queues.cache(this.historyList.type, this.historyList.list);
-					
+
 					pageCached["history"] = true;
 					if(!inBackground){
-						changePageDisplay("history");	
+						changePageDisplay("history");
 						qd.app.underlay.hide();
 					} else {
 						qd.app.loadingIcon.hide();
@@ -497,7 +563,7 @@ dojo.require("dojo.date.locale");
 			});
 		}
 	})();
-	
+
 	function setupNavigation(){
 		dojo.behavior.add({
 			"#bigNavYourQueue a": {
@@ -532,17 +598,23 @@ dojo.require("dojo.date.locale");
 })();
 
 
+// stuff to periodically poll the API for changes
 qd.app.queue.polling = new (function(){
-	var pollTime = 5 * 3600;
-	var isPolling = false;
-	var pollInterval;
-	var initialized = false;
-	
+	var pollTime = 5 * 3600,
+	    isPolling = false,
+	    pollInterval,
+	    initialized = false;
+
 	this.devS = false;
 	this.devR = false;
 	this.devSR = false;
-	
+
 	this.initialized = function(/* Boolean? */val){
+		//	summary:
+		//		Is the polling system initialized? With no args, acts as a getter;
+		//		with the val arg, acts as a setter.
+		//	val:
+		//		Value to which to set the initialized status.
 		if(val !== undefined){
 			initialized = val;
 		}
@@ -550,24 +622,26 @@ qd.app.queue.polling = new (function(){
 	};
 
 	this.init = function(){
-		//console.warn("Start Polling?", dojo.attr(dojo.byId("receiveNotifications"), "checked"))
+		//	summary: Initialize the queue polling system.
 		if(initialized || dojo.attr(dojo.byId("receiveNotifications"), "checked") == false){ return; }
-		console.info("Start Queue Polling")
 		initialized = true;
-		
+
 		var u = qd.app.user();
 		u.atHomeItems = null;
-		qd.app.user(u); 
+		qd.app.user(u);
 
 		this.checkQueues(qd.app.queue.atHomeList.result.items, null);
 		this.checkUpdates();
 	};
-	
+
 	this.dev = function(onOff){
+		//	summary: Development helper method to force checking for updates.
 		setTimeout(dojo.hitch(this, "checkUpdates"), pollTime);
 	};
-	
-	this.checkUpdates = function(type){
+
+	this.checkUpdates = function(){
+		//	summary:
+		//		Check for updates to the At Home queue.
 		qd.service.queues.atHome().addCallback( this, function(res){
 			var athome = res;
 			if(this.devS || this.devR || this.devSR){
@@ -577,23 +651,20 @@ qd.app.queue.polling = new (function(){
 			setTimeout(dojo.hitch(this, "checkUpdates"), pollTime);
 		});
 	};
-	
+
 	this.checkQueues = function(/*Array*/athome){
-		//console.info("...Checking queues...")
-		
+		//	summary:
+		//		Compare locally stored queue items with what the Netflix API reports.
+		//	athome:
+		//		Array of items we think are currently At Home.
 		var shipped = [];
 		var returned = [];
 		var u = qd.app.user();
 		var found = false;
-		
-		//console.log("user atHomeItems:", u, u.atHomeItems)
-		//console.log("athome:", athome);
 
 		if(!u.atHomeItems || !u.atHomeItems.length){
-			//console.log(" - - add to user obj - -")
 			u.atHomeItems = athome;
 			qd.app.save(u);
-			//console.info("At Home items added to user object.")
 			return;
 		}
 
@@ -601,7 +672,6 @@ qd.app.queue.polling = new (function(){
 			found = false;
 			dojo.forEach(u.atHomeItems, function(m){
 				if(m.guid == ah.guid){
-				//	console.log("   compare::", m.shipped, ah.shipped)
 					if(m.shipped != ah.shipped){
 						shipped.push(ah);
 					}
@@ -610,32 +680,27 @@ qd.app.queue.polling = new (function(){
 					}
 					found = true;
 				}
-			});	
+			});
 			if(!found){
 				// added, shipped
 				shipped.push(ah);
 			}
 		});
-		
+
 		if(shipped.length && returned.length){
-			console.log("changes to shipped and receieved", shipped, returned);
 			qd.app.systray.showShippedAndReceived(shipped, returned);
 
 		}else if(shipped.length){
-			console.log("changes to shipped:", shipped)
 			qd.app.systray.showShipped(shipped);
-		
+
 		}else if(returned.length){
-			console.log("changes to receieved:", returned)
 			qd.app.systray.showReceived(returned);
-		
+
 		}else{
-			//console.log("No new notifications.");
 		}
-		
+
 		if (shipped.length || returned.length) {
-			//console.log("Rebuild page to see changes")
-			// flush user object's 
+			// flush user object's
 			// atHomeItems and let it repopulate
 			// after refresh
 			u.atHomeItems = null;
@@ -647,30 +712,30 @@ qd.app.queue.polling = new (function(){
 			qd.app.queue.gotoMyQueueDvd();
 		}
 	};
-	
-	this.doDevCode = function(athome, myqueue){
-		// dev change dates to force update
-		console.info(" - - doing dev code - - ")
-		
+
+	this.doDevCode = function(/* Array */athome, /* Array */myqueue){
+		//	summary:
+		//		Development helper to change dates and thus force an update.
+
 		var d = new Date()
 		var today = dojo.date.locale.format(d, {selector:"date", datePattern:"MM/dd/yy"});
 		d.setDate(d.getDate()+2);
-		var tommorrow = dojo.date.locale.format(d, {selector:"date", datePattern:"MM/dd/yy"});				
-		
+		var tommorrow = dojo.date.locale.format(d, {selector:"date", datePattern:"MM/dd/yy"});
+
 		if (this.devR || this.devSR) {
 			var received = athome[athome.length - 1];
 			received.returned = today;
 		}
-		
+
 		if(this.devS || this.devSR){
 			var updated = myqueue.shift();
 			updated.shipped = today;
 			updated.estimatedArrival = tommorrow;
 			athome.push(updated);
 		}
-		
-		this.devS = this.devR = this.devSR = false;	
+
+		this.devS = this.devR = this.devSR = false;
 	};
-	
+
 })();
 

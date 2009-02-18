@@ -36,9 +36,9 @@ qd.app = new (function(){
 		//		Return a float version of the version of Queued.
 		var info = this.info;
 		if(info.version){
-			return parseFloat(info.version, 10);
+			return parseFloat(info.version, 10);	//	Float
 		}
-		return null;
+		return null;	//	Float
 	});
 
 	//	
@@ -63,13 +63,11 @@ qd.app = new (function(){
 	this.onExit = function(/* air.Event */evt){
 		//	summary:
 		//		Stub for handling any exiting events.
-		//console.log("qd.app.onExit: FIRING");
 	};
 	this.exit = function(){
 		//	summary:
 		//		Manually exit the application and call any finalizers.
 		//		This *should* call our onExit handlers, above.
-		console.warn("APP EXIT")
 		var evt = new air.Event(air.Event.EXITING, false, true); 
 		_app.dispatchEvent(evt); 
 		if(!evt.isDefaultPrevented()){
@@ -84,9 +82,13 @@ qd.app = new (function(){
 		return _app.timeSinceLastUserInput;	 //	int
 	});
 	this.__defineGetter__("idleThreshold", function(){
-		return _app.idleThreshold;
+		//	summary:
+		//		Return how long the app will wait (in seconds) before firing the onIdle event.
+		return _app.idleThreshold;	//	Integer
 	});
-	this.__defineSetter__("idleThreshold", function(/* int */n){
+	this.__defineSetter__("idleThreshold", function(/* Integer */n){
+		//	summary:
+		//		Set the idle threshold for the application.
 		_app.idleThreshold = n;
 	});
 
@@ -111,7 +113,7 @@ qd.app = new (function(){
 	};
 
 	//	checking to see if this is the first time running the app.
-	this.onUpgrade = function(oldVersion, newVersion){
+	this.onUpgrade = function(/* Float */oldVersion, /* Float */newVersion){
 		//	summary:
 		//		Stub for when the application is upgraded
 		console.warn("Update detected!  Upgrading to version " + newVersion);
@@ -135,7 +137,7 @@ qd.app = new (function(){
 	};
 
 	(function(){
-		//	look for the existance of a file.
+		//	look for the existence of a file.
 		var info = self.info,
 			version = parseFloat(info.version, 10),
 			file = air.File.applicationStorageDirectory.resolvePath("preferences/version.txt"),
@@ -183,6 +185,38 @@ qd.app = new (function(){
 	//	END APP EVENTS
 	
 	//	Authorization setup.
+	/*=====
+	qd.app.__TokenObject = function(key, secret){
+		//	summary:
+		//		A token object (key/secret pair) for use with OAuth-based services.
+		//	key: String
+		//		The public key assigned by the OAuth service.
+		//	secret: String
+		//		The private key assigned by the OAuth service.
+		this.key = key;
+		this.secret = secret;
+	};
+
+	qd.app.__AuthObject = function(consumer, token, userId, sig_method){
+		//	summary:
+		//		The token/authorization object used by Queued to make any
+		//		requests to Netflix to access protected resources.
+		//	consumer: qd.app.__TokenObject
+		//		The key/secret pair assigned to Queued by Netflix.
+		//	token: qd.app.__TokenObject?
+		//		The key/secret pair assigned to the User by Netflix.  Will
+		//		be null if the user has not completed the authorization process.
+		//	userId: String?
+		//		The ID of the user as assigned by Netflix.
+		//	sig_method: String?
+		//		The signature method to be used by the OAuth service. HMAC-SHA1 is 
+		//		the default.
+		this.consumer = consumer;
+		this.token = token;
+		this.userId = userId;
+		this.sig_method = sig_method || "HMAC-SHA1";
+	}
+	=====*/
 	var acl;
 	this.__defineGetter__("authorization", function(){
 		//	summary:
@@ -199,7 +233,7 @@ qd.app = new (function(){
 			};
 			qd.services.storage.item("token", acl);
 		}
-		return acl;	//	Object
+		return acl;	//	qd.app.__AuthObject
 	});
 
 	this.__defineGetter__("authorized", function(){
@@ -207,7 +241,7 @@ qd.app = new (function(){
 		//		Return whether or not the current user is actually authorized.
 		//		Replaces isLoggedIn().
 		var signer = this.authorization;
-		return (signer.token !== null && signer.userId !== null);
+		return (signer.token !== null && signer.userId !== null);	//	Boolean
 	});
 
 	this.authorize = function(/* String */token, /* String */secret, /* String */userId){
@@ -230,7 +264,7 @@ qd.app = new (function(){
 
 		//	drop it into storage.
 		qd.services.storage.item("token", o);
-		return o;
+		return o;	//	qd.app.__AuthObject
 	};
 
 	this.deauthorize = function(){
@@ -247,7 +281,7 @@ qd.app = new (function(){
 		qd.service.queues.clear();
 		qd.services.clearItems();
 
-		return o;
+		return o;	//	qd.app.__AuthObject
 	};
 
 	//	authorization initialization
@@ -263,17 +297,26 @@ qd.app = new (function(){
 	//	User information
 	var user;
 	this.user = function(/* Object? */obj){
+		//	summary:
+		//		An object that represents in memory user information.
+		//		If an object is passed, this acts as a setter; if not,
+		//		it acts as a getter.  If there is no user object in
+		//		memory and it is called as a getter, this will retrieve
+		//		it from local storage, if it exists.
 		if(obj!==undefined){
 			user = obj;
 			this.save();
-			return user;
+			return user;	//	Object
 		}
 		if(user){
-			return user;
+			return user;	//	Object
 		}
-		return user = qd.services.storage.item("user");
+		return user = qd.services.storage.item("user");	//	Object
 	};
+
 	this.save = function(){
+		//	summary:
+		//		Store the user object into encrypted local storage.
 		var _s = new Date();
 		qd.services.storage.item("user", user);
 		console.warn("Time to save user info into storage: " + (new Date()-_s) + "ms.");
@@ -306,6 +349,8 @@ qd.app = new (function(){
 
 	//	view the source code.
 	this.source = function(){
+		//	summary:
+		//		Open the Adobe source code viewer so one can browse the source tree.
 		try {
 			var vs = air.SourceViewer.getDefault();
 			//	Note that the following exclusions are aimed at a release, and not a debug session.
@@ -321,25 +366,26 @@ qd.app = new (function(){
 	};
 
 	/*=====
-	 qd.app.underlay.__Args = function(params){
-		//	params: Object
-		//		Parameters governing the underlay behavior:
-		//		* loader (Boolean, default true) specifies whether or not
-		//		to show the spinner/loading box.
-		//		* bodyOnly (Boolean, default true) specifies whether or
-		//		not to cover the page header with the underlay, as opposed
-		//		to covering only the page content/body area.
-		this.params = params;
+	 qd.app.underlay.__Args = function(loader, bodyOnly){
+	 	//	summary:
+		//		Keyword arguments object to be passed to qd.app.underlay.show.
+		//	loader: Boolean?
+		//		Specifies whether to show the loading/spinner box.  Defaults to true.
+		//	bodyOnly: Boolean?
+		//		Specifies whether or not to cover the page header with an underlay element,
+		//		as opposed to just covering the body area. Defaults to true.
+		this.loader = loader!==undefined? loader: true;
+		this.bodyOnly = bodyOnly!==undefined? bodyOnly: true;
 	 }
 	=====*/ 
-
-	// Here's a simple underlay object; call the show() and hide() methods
-	// to toggle it on and off. The object tracks the calls with a simple
-	// counter and only hides the underlay when the number of calls to
-	// hide() matches the number of calls to show().
 	this.underlay = new (function(){
+		//	summary:
+		//		A singleton object to handle UI blocking for calls that should not
+		//		allow user interaction.
 		var inc=0;
-		this.show = function(/* qd.app.underlay.show.__Args */kwArgs){
+		this.show = function(/* qd.app.underlay.__Args */kwArgs){
+			//	summary:
+			//		Show the underlay based on the passed kwArgs.
 			if(++inc){
 				var u1 = dojo.byId("topMoviesUnderlay"),
 					u2 = dojo.byId("queueUnderlay"),
@@ -361,6 +407,8 @@ qd.app = new (function(){
 			}
 		};
 		this.hide = function(){
+			//	summary:
+			//		Hide the underlay.
 			if(!--inc){
 				var n = dojo.byId("loaderNode");
 				if(dojo.style(n, "display") == "block"){
@@ -380,12 +428,17 @@ qd.app = new (function(){
 	})();
 
 	this.loadingIcon = new (function(){
+		//	summary:
+		//		A singleton object that represents the loading icon at the top right.
 		var showing = false, timer;
 		this.__defineGetter__("showing", function(){
-			return showing;
+			//	summary:
+			//		Returns whether or not the icon is currently visible.
+			return showing;	//	Boolean
 		});
 		this.show = function(){
-			//	error icon always takes precedence.
+			//	summary:
+			//		Show this icon.  If the error icon is visible, don't show it.
 			if(qd.app.errorIcon.showing){ return; }
 			if(showing){ return; }
 
@@ -403,6 +456,8 @@ qd.app = new (function(){
 			}), 10000);
 		};
 		this.hide = function(){
+			//	summary:
+			//		Hide this icon.
 			dojo.query(".loadingIndicator, .bgLoadingSpinner").forEach(function(item){
 				item.style.display = "none";
 			});
@@ -415,11 +470,17 @@ qd.app = new (function(){
 	})();
 
 	this.errorIcon = new (function(){
+		//	summary:
+		//		A singleton object that controls the alert/error icon at the top right.
 		var showing = false;
 		this.__defineGetter__("showing", function(){
-			return showing;
+			//	summary:
+			//		Returns whether or not the icon is currently visible.
+			return showing;	//	Boolean
 		});
 		this.show = function(){
+			//	summary:
+			//		Show the icon.
 			if(showing){ return; }
 
 			if(qd.app.loadingIcon.showing){
@@ -435,6 +496,8 @@ qd.app = new (function(){
 			showing = true;
 		};
 		this.hide = function(){
+			//	summary:
+			//		Hide the icon.
 			dojo.query(".loadingIndicator, .offlineIndicator").forEach(function(item){
 				item.style.display = "none";
 			});
@@ -443,6 +506,8 @@ qd.app = new (function(){
 	})();
 
 	this.errorTooltip = new (function(){
+		//	summary:
+		//		A singleton object that controls the error tooltip, shown at the top right.
 		var fader, timeout, delay = 5000, duration = 1600, endHandle;
 		this.show = function(/* String */title, /* String */msg, /* Boolean? */persistIcon){
 			//	summary:
@@ -572,8 +637,6 @@ qd.app = new (function(){
 				bkClass = true;
 				break;
 		}
-
-		console.log("app switch page: " + page, dijit.byId("contentNode"));
 
 		dijit.byId("contentNode").selectChild(divId);	
 		qd.app.selectNav(menuId, "bigNav");

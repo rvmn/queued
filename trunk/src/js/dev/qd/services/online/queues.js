@@ -19,22 +19,27 @@ dojo.require("dojo.date.locale");
 	}
 
 	dojo.mixin(qd.services.online.queues, {
+		//	summary:
+		//		The online-based service for queue information and manipulation.
 		paths: {
 			GET: {
-				"queues/disc"				:"//queue/queue_item",
+				"queues/disc/available"		:"//queue/queue_item",
 				"queues/disc/saved"			:"//queue/queue_item",
 				"at_home"					:"//at_home/at_home_item",
-				"queues/instant"			:"//queue/queue_item",
+				"queues/instant/available"	:"//queue/queue_item",
 				"rental_history/shipped"	:"//rental_history/rental_history_item",
 				"rental_history/returned"	:"//rental_history/rental_history_item",
-				"rental_history/watched"	:"//rental_history/rental_history_item",
-				"queues/disc/available"		:""
+				"rental_history/watched"	:"//rental_history/rental_history_item"
 			}
 		},
 		etag: function(/* String */queue, /* String? */tag){
-			return etag(queue, tag);
+			//	summary:
+			//		Store or retreive the latest etag for the passed queue.
+			return etag(queue, tag);	//	String
 		},
 		clear: function(){
+			//	summary:
+			//		Clear both the queue cache and the transaction queue from the database.
 			db.execute({
 				sql: "DELETE FROM QueueCache",
 				result: function(data){
@@ -67,6 +72,8 @@ dojo.require("dojo.date.locale");
 		 }
 		 =====*/
 		fetch: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the queue based on the passed partial URL string.
 			var dfd = util.prepare(kwArgs),
 				signer = qd.app.authorization;
 			
@@ -77,7 +84,7 @@ dojo.require("dojo.date.locale");
 
 			//	always get it from the server, but make sure you cache the queue on the user object
 			dojo.xhrGet(dojox.io.OAuth.sign("GET", {
-				url: "http://api.netflix.com/users/" + signer.userId + "/" + (kwArgs.url || "queues/disc")
+				url: "http://api.netflix.com/users/" + signer.userId + "/" + (kwArgs.url || "queues/disc/available")
 					+ "?sort=queue_sequence"
 					+ "&start_index=" + (kwArgs.start || 0)
 					+ "&max_results=" + (kwArgs.max || 500)
@@ -85,7 +92,7 @@ dojo.require("dojo.date.locale");
 					+ "&expand=" + encodeURIComponent("discs,episodes,seasons,synopsis,formats"),
 				handleAs: "xml",
 				load: function(xml, ioArgs){
-					var results = [], node, items = xml.evaluate(qd.services.online.queues.paths.GET[(kwArgs.url || "queues/disc")], xml);
+					var results = [], node, items = xml.evaluate(qd.services.online.queues.paths.GET[(kwArgs.url || "queues/disc/available")], xml);
 					var test = xml.getElementsByTagName("etag"), tagq;
 					if(test && test.length){
 						if(kwArgs.url && kwArgs.url.indexOf("queues/disc")>-1){
@@ -113,10 +120,12 @@ dojo.require("dojo.date.locale");
 					dfd.errback(err, ioArgs);
 				}
 			}, signer), false);
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		//	specific things
-		atHome: function(kwArgs){
+		atHome: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's At Home queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "at_home";
 			var dfd = this.fetch(kwArgs);
@@ -139,61 +148,55 @@ dojo.require("dojo.date.locale");
 					}
 				});
 			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		discs: function(kwArgs){
+		discs: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's disc queue.
 			kwArgs = kwArgs || {};
-			kwArgs.url = "queues/disc";
+			kwArgs.url = "queues/disc/available";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-			//	console.log("discs: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		saved: function(kwArgs){
+		saved: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's saved discs.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "queues/disc/saved";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-			//	console.log("saved discs: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		instant: function(kwArgs){
+		instant: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's instant queue.
 			kwArgs = kwArgs || {};
-			kwArgs.url = "queues/instant";
+			kwArgs.url = "queues/instant/available";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-			//	console.log("instant: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		watched: function(kwArgs){
+		watched: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's instant watched queue.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/watched";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-			//	console.log("watched: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		shipped: function(kwArgs){
+		shipped: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's shipped disc history.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/shipped";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-				console.log("shipped: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
-		returned: function(kwArgs){
+		returned: function(/* qd.services.online.queues.fetch.__FetchArgs */kwArgs){
+			//	summary:
+			//		Fetch the user's returned disc history.
 			kwArgs = kwArgs || {};
 			kwArgs.url = "rental_history/returned";
 			var dfd = this.fetch(kwArgs);
-			dfd.addCallback(function(arr){
-				console.log("returned: ", arr);
-			});
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 
 		/*=====
@@ -216,7 +219,7 @@ dojo.require("dojo.date.locale");
 			//		The errback function on failure.
 		 }
 		 =====*/
-		modify: function(/* qd.services.online.queues.add.__AddArgs */kwArgs){
+		modify: function(/* qd.services.online.queues.add.__ModifyArgs */kwArgs){
 			//	summary:
 			//		Add or move an item in a queue.  Note that for the online
 			//		version, we can ignore the passed title.
@@ -252,7 +255,7 @@ dojo.require("dojo.date.locale");
 				}
 			}, signer);
 			dojo.xhrPost(args);
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		/*=====
 		 qd.services.online.queues.remove.__RemoveArgs = function(url, guid, title, result, error){
@@ -295,7 +298,7 @@ dojo.require("dojo.date.locale");
 					dfd.errback(err, ioArgs);
 				}
 			}, signer));
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		},
 		cache: function(/* String */queue, /* Array */list){
 			//	summary:

@@ -2,6 +2,8 @@ dojo.provide("qd.services.offline.user");
 
 (function(){
  	dojo.mixin(qd.services.offline.user, {
+		//	summary:
+		//		Return the user information out of the cache.
 		fetch: function(){
 			//	summary:
 			//		Return the cached user object if we are authorized.
@@ -13,7 +15,7 @@ dojo.provide("qd.services.offline.user");
 			setTimeout(function(){
 				dfd.callback(qd.app.user());
 			}, 10);
-			return dfd;
+			return dfd;	//	dojo.Deferred
 		}
 	});
 })();
