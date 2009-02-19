@@ -29,8 +29,10 @@ dojo.require("qd.services.authorization");
 	qd.services.init = function(){
 		//	summary:
 		//		Initialize the Queued services.
+		qd.app.splash("Getting database password");
 		pwd = storage.item(dbProp);
 		if(!pwd){
+			qd.app.splash("Generating database password");
 			//	generate a new password for the database service and store it.
 			var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*~?0123456789-_abcdefghijklmnopqrstuvwxyz",
 				key = "";
@@ -38,9 +40,12 @@ dojo.require("qd.services.authorization");
 				key += tab.charAt(Math.round(Math.random()*tab.length));
 			}
 			pwd = storage.item(dbProp, key);
+			qd.app.splash("Password generated (" + pwd.length + ")");
 		}
 
+		qd.app.splash("Initializing network monitor");
 		qd.services.network.start();
+		qd.app.splash("Initializing database services");
 		qd.services.data.init(pwd, db, qd.services._forceCreate);
 	};
 
