@@ -28,9 +28,10 @@
 		<img src="img/loginBg.jpg" style="position:absolute;left:0;bottom:0;" />
 		<div style="position:absolute;top:50%;left:50%;">
 			<img src="img/loadingQueuedSplash.png" style="position:absolute;left:-411px;top:-221px;" />
-			<div id="splashMessage" style="position:absolute;left:84px;top:72px;width:240px;">Checking network connectivity<span id="splashAnim">...</span></div>
+			<div id="splashMessage" style="position:absolute;left:84px;top:72px;width:240px;">Initializing...</div>
 		</div>
 	</div>
+	<!--
 	<script>
 		var __splashPos = 0, _splashLength = 4;
 		var __splashTimer__ = setInterval(function(){
@@ -46,6 +47,7 @@
 			}
 		}, 500);
 	</script>
+	-->
 
 	<div id="layoutNode">
 		<!-- page header -->
@@ -142,7 +144,7 @@
 							<div id="authOverlay" style="display:block;">
 								<h2>Authorize Queued</h2>
 								<p>The Netflix login window tells Netflix that Queued can have limited access your account.</p>
-								<input class="authorizeBtn" type="authorize" value="">
+								<input class="authorizeBtn" type="submit" onclick="return false;" value="">
 								<div class="authOverlayRight"></div>
 							</div>
 
@@ -558,8 +560,8 @@
 			isDebug: true, //true,
 			parseOnLoad: false,
 			modulePaths: {
-				qd: "dev/qd",
-				dair: "dev/dair"
+				qd: "../qd", //"dev/qd",
+				dair: "../dair" //"dev/dair"
 			},
 			airConfig: {
 				terminal:false,
@@ -579,7 +581,7 @@
 
 	</script>
 	<script type="application/x-shockwave-flash" src="lib/servicemonitor.swf"></script>
-	<script src="js/dojo.js"></script>
+	<script src="js/dev/dojo/dojo.js"></script>
 	<!--
 	<script src="js/qd.js"></script>
 	-->

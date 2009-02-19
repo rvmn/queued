@@ -86,10 +86,12 @@ dojo.provide("qd.services.network");
 		this.onInitialize = function(/* String */url){
 			//	summary:
 			//		Fires when the network services is initialized.
+			qd.app.splash("Network services initialized");
 		};
 		this.onStart = function(){
 			//	summary:
 			//		Fires when the network services is started.
+			qd.app.splash("Network services started");
 		};
 		this.onStop = function(){
 			//	summary:
