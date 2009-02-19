@@ -1,3 +1,2 @@
-rm ~/Library/Preferences/com.sitepen.Queued
-rm ~/Library/Application Support/Adobe/AIR/ELS/com.sitepen.Queued
-
+rm -rf ~/Library/Preferences/com.sitepen.Queue*
+rm -rf ~/Library/Application*/Adobe/AIR/ELS/com.sitepen.Queue*
