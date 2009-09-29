@@ -114,10 +114,12 @@ dojo.provide("qd.services.online.titles");
 				//	parse the info, merge and save
 				var node, items = xml.evaluate("//ratings/ratings_item", xml), a = [], toSave = [];
 				while(node = items.iterateNext()){
-					var tmp = ps.titles.fromXml(node),
+					var tmp = ps.titles.fromXml(node), r, title;
+					if(!dojo.isString(tmp)){
 						r = tmp.ratings,
 						title = titles[tmp.guid];
-					if(!title || dojo.isString(title)){
+					}
+					if(title === undefined || !title || dojo.isString(title)){
 						//	for some reason we only have a string.
 						title = tmp;
 					} else {
