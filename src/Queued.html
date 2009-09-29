@@ -541,6 +541,18 @@
 		</div>
 	</div>
 
+	<!-- AIR runtime upgrade needed dialog -->
+	<div id="updateNeededDialogNode">
+		<div id="updateMessage">
+			<p>
+				You must upgrade Adobe AIR to run Queued (current version: <span id="updateNeededVersion"></span>; minimum needed: 1.5.0).
+			</p>
+			<div style="width:100%;text-align:center;margin-top:1em;">
+				<a href="http://get.adobe.com/air/" id="airUpgradeLink"><img src="/img/get_adobe_air.png" border="0" width="158" height="39" /></a>
+			</div>
+		</div>
+	</div>
+
 	<!-- background offline indicator tooltip -->
 	<div id="indicatorTooltip" class="indicatorTooltip">
 		<div class="indicatorTooltipTop"></div>
@@ -583,6 +595,7 @@
 	<script type="application/x-shockwave-flash" src="lib/servicemonitor.swf"></script>
 	<script src="js/dev/dojo/dojo.js"></script>
 	<!--
+	<script src="js/dojo.js"></script>
 	<script src="js/qd.js"></script>
 	-->
 	<script>

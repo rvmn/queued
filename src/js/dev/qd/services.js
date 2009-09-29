@@ -43,10 +43,14 @@ dojo.require("qd.services.authorization");
 			qd.app.splash("Password generated (" + pwd.length + ")");
 		}
 
-		qd.app.splash("Initializing network monitor");
-		qd.services.network.start();
-		qd.app.splash("Initializing database services");
-		qd.services.data.init(pwd, db, qd.services._forceCreate);
+		if(qd.app.airCheck){
+			qd.app.splash("Initializing network monitor");
+			qd.services.network.start();
+			qd.app.splash("Initializing database services");
+			qd.services.data.init(pwd, db, qd.services._forceCreate);
+		} else {
+			qd.app.splash("AIR runtime check failed");
+		}
 	};
 
 	var registry = {}, titleRegistry = {};

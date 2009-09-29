@@ -44,6 +44,22 @@ qd.app = new (function(){
 		}
 		return null;	//	Float
 	});
+	this.__defineGetter__("runtime", function(){
+		//	summary:
+		//		Return an object representing the current runtime version of AIR.
+		var v = _app.runtimeVersion && _app.runtimeVersion.split(".") || [];
+		var o = {
+			major: v[0] !== undefined && parseInt(v[0], 10) || 0,
+			minor: v[1] !== undefined && parseInt(v[1], 10) || 0,
+			revision: v[2] !== undefined && parseInt(v[2], 10) || 0,
+			build: v[3] !== undefined && parseInt(v[3], 10) || 0
+		};
+		return o;	//	Object
+	});
+	this.__defineGetter__("airCheck", function(){
+		var o = this.runtime;
+		return !(o.major < 1 || o.major==1 && o.minor < 5);
+	});
 
 	//	
 	//	cleanup functions

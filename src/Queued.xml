@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
-<application xmlns="http://ns.adobe.com/air/application/1.0">
+<application xmlns="http://ns.adobe.com/air/application/1.5">
 	<id>com.sitepen.Queued</id>
 	<filename>Queued</filename>
 	<name>Queued</name>
 	<description>An AIR Application for managing your Netflix queue, brought to you by SitePen, Inc.</description>
-	<version>1.01</version>
+	<version>1.02</version>
 	<copyright>2009 SitePen, Inc.  All Rights Reserved.</copyright>
 
 	<initialWindow>
@@ -14,7 +14,7 @@
 		<transparent>false</transparent>
 		<visible>true</visible>
 		<width>935</width>
-		<height>700</height>
+		<height>600</height>
 		<x>20</x>
 		<y>20</y>
 		<minimizable>true</minimizable>
