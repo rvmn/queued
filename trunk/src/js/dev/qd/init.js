@@ -85,7 +85,32 @@ qd.init = qd.init || {};
 		var b = qd.services.network.available;
 		return b ? qd.services.online : qd.services.offline;	//	Object
 	});
-	dojo.addOnLoad(qd.services.init);
+
+	if(!qd.app.airCheck){
+		//	redefine addOnLoad.
+		dojo.addOnLoad(function(){
+			// update confirmation dialog
+			(new dojox.widget.Dialog({dimensions: [400,185], modal:true}, "updateNeededDialogNode")).startup();
+			//dojo.byId("splashScreen").style.display="none";
+
+			//	check if an update is needed.
+			dojo.byId("airUpgradeLink").onclick = function(){
+				//	summary: Open a link in the system browser.
+				air.navigateToURL(new air.URLRequest(this.href));
+				setTimeout(function(){ 
+					qd.app.exit();
+				}, 3000);
+				return false;
+			};
+			
+			dojo.byId("updateNeededVersion").innerHTML = air.NativeApplication.nativeApplication.runtimeVersion;
+			dijit.byId("updateNeededDialogNode").show();
+		});
+	}
+
+	dojo.addOnLoad(function(){
+		qd.services.init();
+	});
 
 	function setupNavigation(){
 		var __splash = dojo.connect(qd.app, "switchPage", function(){

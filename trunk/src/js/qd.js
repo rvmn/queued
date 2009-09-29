@@ -722,10 +722,12 @@ dojo.provide("qd.services.network");
 		this.onInitialize = function(/* String */url){
 			//	summary:
 			//		Fires when the network services is initialized.
+			qd.app.splash("Network services initialized");
 		};
 		this.onStart = function(){
 			//	summary:
 			//		Fires when the network services is started.
+			qd.app.splash("Network services started");
 		};
 		this.onStop = function(){
 			//	summary:
@@ -3482,8 +3484,10 @@ dojo.provide("qd.services");
 	qd.services.init = function(){
 		//	summary:
 		//		Initialize the Queued services.
+		qd.app.splash("Getting database password");
 		pwd = storage.item(dbProp);
 		if(!pwd){
+			qd.app.splash("Generating database password");
 			//	generate a new password for the database service and store it.
 			var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*~?0123456789-_abcdefghijklmnopqrstuvwxyz",
 				key = "";
@@ -3491,9 +3495,12 @@ dojo.provide("qd.services");
 				key += tab.charAt(Math.round(Math.random()*tab.length));
 			}
 			pwd = storage.item(dbProp, key);
+			qd.app.splash("Password generated (" + pwd.length + ")");
 		}
 
+		qd.app.splash("Initializing network monitor");
 		qd.services.network.start();
+		qd.app.splash("Initializing database services");
 		qd.services.data.init(pwd, db, qd.services._forceCreate);
 	};
 
@@ -3558,6 +3565,10 @@ qd.app = new (function(){
 
 	//	BEGIN APPLICATION-SPECIFIC EVENTS
 	_app.idleThreshold = 300;
+
+	this.splash = function(msg){
+		dojo.byId("splashMessage").innerHTML = msg + "...";
+	};
 
 	//	Application-specific information
 	this.__defineGetter__("info", function(){
@@ -3665,6 +3676,7 @@ qd.app = new (function(){
 		//	summary:
 		//		Stub for when the application is upgraded
 		console.warn("Update detected!  Upgrading to version " + newVersion);
+		this.splash("Upgrading Queued to version " + newVersion);
 		var file = air.File.applicationDirectory.resolvePath("js/updates/commands.js");
 		if(file.exists){
 			var fs = new air.FileStream();
@@ -3680,6 +3692,7 @@ qd.app = new (function(){
 	this.onFirstRun = function(info){
 		//	summary:
 		//		Stub for when the application is run for the first time
+		this.splash("Setting up Queued");
 		console.log("qd.app.onFirstRun!");
 		console.log(info);
 	};
@@ -3719,6 +3732,7 @@ qd.app = new (function(){
 	//	set up the application updater.
 	var updater;
 	dojo.addOnLoad(dojo.hitch(this, function(){
+		this.splash("Setting up the auto-update check");
 		try{
 			updater = new runtime.air.update.ApplicationUpdaterUI();
 			updater.configurationFile = new air.File("app:/updateConfig.xml");
@@ -3730,6 +3744,7 @@ qd.app = new (function(){
 			});
 			updater.initialize();
 		} catch(ex){
+			this.splash("Auto-update setup failed");
 			//	swallow this error; for some reason Linux doesn't like
 			//	the application updater.
 		}
@@ -3841,9 +3856,11 @@ qd.app = new (function(){
 	dojo.addOnLoad(function(){
 		//	try to get the current token out of storage.
 		try {
+			self.splash("Getting user token");
 			acl = qd.services.storage.item("token");
 		} catch(ex){
 			//	swallow it.
+			self.splash("User token not found");
 		}
 	});
 

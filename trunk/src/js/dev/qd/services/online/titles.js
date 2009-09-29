@@ -202,7 +202,7 @@ dojo.provide("qd.services.online.titles");
 			dojo.xhrGet(dojox.io.OAuth.sign("GET", {
 				url: "http://api.netflix.com/catalog/titles?"
 					+ "term=" + t
-					+ (kwArgs.start ? "&start_index=" + kwArgs.start : "")
+					+ (kwArgs.start && kwArgs.start > 1 ? "&start_index=" + kwArgs.start : "")
 					+ (kwArgs.max ? "&max_results=" + kwArgs.max : "")
 					+ "&expand=" + some,
 				handleAs: "xml",
