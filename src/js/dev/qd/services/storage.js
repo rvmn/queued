@@ -9,7 +9,7 @@ dojo.require("dojox.encoding.crypto.SimpleAES");
 		var _els = (useELS !== undefined) ? useELS : true;
 
 		//	basic common functionality
-		var withEls = (function(){
+		var withEls = function(){
 			var els = air.EncryptedLocalStore,
 				ba = air.ByteArray;
 
@@ -71,9 +71,9 @@ dojo.require("dojox.encoding.crypto.SimpleAES");
 					qd.services.storage.onClear();
 				}
 			};
-		})();
+		};
 
-		var noEls = (function(){
+		var noEls = function(){
 			//	great, this is busted.  redefine everything.  Note that this is kind of insecure, because
 			//	the key is hardcoded here :(
 			var storageKey = "Mtmu4zx9LzS5cA==",
@@ -135,7 +135,7 @@ dojo.require("dojox.encoding.crypto.SimpleAES");
 					qd.services.storage.onClear();
 				}
 			};
-		})();
+		};
 
 		this.onClear = function(){
 			//	summary:
@@ -148,15 +148,15 @@ dojo.require("dojox.encoding.crypto.SimpleAES");
 				withEls.item("els-test", true);
 				var test = withEls.item("els-test");
 				if(test){
-					dojo.mixin(this, withEls);
+					dojo.mixin(this, withEls());
 				}
 				console.log("Using the EncryptedLocalStorage!");
 			} catch(ex){
-				dojo.mixin(this, noEls);
+				dojo.mixin(this, noEls());
 				console.log("Using the Handrolled Storage!");
 			}
 		} else {
-			dojo.mixin(this, noEls);
+			dojo.mixin(this, noEls());
 			console.log("Using the Handrolled Storage!");
 		}
 	})();
